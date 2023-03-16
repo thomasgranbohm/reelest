@@ -1,8 +1,11 @@
 import { Router } from "express";
+import fs from "fs/promises";
 import Joi from "joi";
+import path from "path";
 
 import Authentication from "middlewares/Authentication.js";
 import Pagination from "middlewares/Pagination.js";
+import { VideoUpload } from "middlewares/Upload.js";
 
 import VideoModel from "models/Video.model.js";
 
@@ -48,33 +51,66 @@ VideoRouter.get("/:id/:slug", async (req, res) => {
 		return res.status(404).send({ error: { message: "Not found" } });
 	}
 
-	return res.send({ data: { video: video.toObject() } });
+	const { title, status } = video;
+
+	return res.send({ data: { video: { title, id, slug, status } } });
 });
 
-VideoRouter.post("/", Authentication, async (req, res) => {
-	const { value, error } = Joi.object<VideoCreateBody>({
-		description: Joi.string(),
-		title: Joi.string().min(2).max(64).required(),
-	}).validate(req.body);
+VideoRouter.get(
+	"/:id/:slug/stream/:stream(index.m3u8|index[0-9]+.ts)",
+	async (req, res) => {
+		const { id, slug, stream } = req.params;
 
-	if (error) {
-		return res.status(400).send({
-			error: {
-				message: "Malformed body",
-				stack: error,
-			},
+		const video = await VideoModel.findOne({
+			id,
+			slug,
+			status: VideoStatus.Published,
 		});
+
+		if (video === null) {
+			return res.status(404).send({ error: { message: "Not found" } });
+		}
+
+		try {
+			fs.stat(path.resolve(video.mediaPath, stream));
+
+			return res.sendFile(path.resolve(video.mediaPath, stream));
+		} catch (error) {
+			return res.status(404).send({ error: { message: "Not found" } });
+		}
 	}
+);
 
-	const token = await decodeToken(req.auth.token);
+VideoRouter.post(
+	"/",
+	Authentication,
+	VideoUpload.single("file"),
+	async (req, res) => {
+		const { value, error } = Joi.object<VideoCreateBody>({
+			description: Joi.string(),
+			title: Joi.string().min(2).max(64).required(),
+		}).validate(req.body);
 
-	const video = await new VideoModel({
-		user: { _id: token._id },
-		...value,
-	}).save();
+		if (error || !req.file) {
+			return res.status(400).send({
+				error: {
+					message: "Malformed body",
+					stack: error,
+				},
+			});
+		}
 
-	return res.send({ data: { video: video.toObject() } });
-});
+		const token = await decodeToken(req.auth.token);
+
+		const { title, id, slug, status } = await new VideoModel({
+			user: { _id: token._id },
+			mediaPath: req.file.path,
+			...value,
+		}).save();
+
+		return res.send({ data: { video: { title, id, slug, status } } });
+	}
+);
 
 VideoRouter.put("/:id/:slug", Authentication, async (req, res) => {
 	const { value, error } = Joi.object<VideoUpdateBody>({

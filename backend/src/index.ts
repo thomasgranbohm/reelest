@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
+import cors from "cors";
 import express from "express";
 import mongoose from "mongoose";
 
@@ -11,7 +12,9 @@ import config from "./config.js";
 
 const server = express();
 
+server.use(cors());
 server.use(express.json());
+server.use(express.urlencoded({ extended: true }));
 
 // Routers
 server.use("/user", UserRouter);
@@ -24,8 +27,8 @@ const main = async () => {
 		`mongodb://${config.database.host}:${config.database.port}`,
 		{
 			user: config.database.user,
-			appName: config.database.name,
 			pass: config.database.pass,
+			appName: config.database.name,
 		}
 	);
 

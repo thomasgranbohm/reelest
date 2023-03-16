@@ -13,6 +13,10 @@ const config = {
 	jsonwebtoken: {
 		secret: process.env.JWT_SECRET || "abcdefgh01234567",
 	},
+	upload: {
+		dest: process.env.UPLOAD_DIR || "/tmp/uploads",
+		video_mimetypes: ["video/mp4"],
+	},
 };
 
 export default config;
