@@ -1,0 +1,36 @@
+{
+	"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+	"parser": "@typescript-eslint/parser",
+	"root": true,
+	"plugins": [
+		"@typescript-eslint",
+		"simple-import-sort",
+		"sort-keys-fix",
+		"typescript-sort-keys",
+		"sort-destructure-keys"
+	],
+	"overrides": [
+		{
+			"files": ["*.js", "*.ts"],
+			"rules": {
+				"simple-import-sort/imports": [
+					"error",
+					{
+						"groups": [
+							["^@?\\w"],
+							["^(@|lib)(/.*|$)"],
+							["^(@|middlewares)(/.*|$)"],
+							["^(@|models)(/.*|$)"],
+							["^(@|routers)(/.*|$)"],
+							["^(@|services)(/.*|$)"],
+							["^(@|types)(/.*|$)"],
+							["^\\.\\.(?!/?$)", "^\\.\\./?$"],
+							["^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)", "^\\./?$"],
+							["^\\u0000"]
+						]
+					}
+				]
+			}
+		}
+	]
+}

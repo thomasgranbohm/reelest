@@ -1,0 +1,44 @@
+{
+	"name": "reelest-backend",
+	"version": "0.1.0",
+	"description": "",
+	"scripts": {
+		"build": "tsc -b .",
+		"start": "node dist/index.js",
+		"prepare": "ts-patch install -s",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": {
+		"email": "thomas@granbohm.dev",
+		"name": "Thomas Granbohm",
+		"url": "https://thomas.granbohm.dev"
+	},
+	"license": "ISC",
+	"devDependencies": {
+		"@types/express": "^4.17.17",
+		"@types/jsonwebtoken": "^9.0.1",
+		"@types/node": "^18.15.3",
+		"@types/validator": "^13.7.14",
+		"@typescript-eslint/eslint-plugin": "^5.55.0",
+		"@typescript-eslint/parser": "^5.55.0",
+		"eslint": "8.26.0",
+		"eslint-plugin-simple-import-sort": "^8.0.0",
+		"eslint-plugin-sort-destructure-keys": "^1.4.0",
+		"eslint-plugin-sort-keys-fix": "^1.1.2",
+		"eslint-plugin-typescript-sort-keys": "^2.1.0",
+		"ts-patch": "^2.1.0",
+		"typescript": "^4.9.5",
+		"typescript-transform-paths": "^3.4.6"
+	},
+	"dependencies": {
+		"express": "^4.18.2",
+		"joi": "^17.8.4",
+		"jsonwebtoken": "^9.0.0",
+		"mongoose": "^7.0.2",
+		"nanoid": "^4.0.1",
+		"slugify": "^1.6.5",
+		"validator": "^13.9.0"
+	},
+	"type": "module"
+}

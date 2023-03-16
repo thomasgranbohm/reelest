@@ -1,0 +1,41 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "esnext",
+		"moduleResolution": "node",
+		"lib": ["esnext"],
+		"noImplicitAny": false,
+		"noUnusedParameters": false,
+		"outDir": "./dist",
+		"forceConsistentCasingInFileNames": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"strictNullChecks": false,
+		"strictFunctionTypes": false,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": "src/",
+		"allowJs": true,
+		"strict": true,
+		"isolatedModules": true,
+		"esModuleInterop": true,
+		"paths": {
+			"lib/*": ["./lib/*"],
+			"models/*": ["./models/*"],
+			"middlewares/*": ["./middlewares/*"],
+			"routers/*": ["./routers/*"],
+			"services/*": ["./services/*"],
+			"types/*": ["./types/*"]
+		},
+		"plugins": [
+			{ "transform": "typescript-transform-paths" },
+			{
+				"transform": "typescript-transform-paths",
+				"afterDeclarations": true
+			}
+		]
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules"],
+	"files": ["src/types/custom.d.ts"]
+}
