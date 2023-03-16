@@ -4,38 +4,39 @@ import slugify from "slugify";
 
 import { IVideoSchema, VideoStatus } from "types/video.js";
 
-export const VideoSchema = new Schema<IVideoSchema>({
-	id: {
-		type: "string",
+export const VideoSchema = new Schema<IVideoSchema>(
+	{
+		id: {
+			type: "string",
+		},
+		description: {
+			type: "string",
+		},
+		title: {
+			type: "string",
+			required: true,
+			min: 2,
+			max: 64,
+		},
+		slug: {
+			type: "string",
+			trim: true,
+			match: /^[a-zA-Z0-9-]$/,
+		},
+		user: {
+			type: Schema.Types.ObjectId,
+			ref: "User",
+		},
+		status: {
+			type: "string",
+			enum: ["published", "processing", "created"],
+			default: VideoStatus.Processing,
+		},
 	},
-	description: {
-		type: "string",
-	},
-	title: {
-		type: "string",
-		required: true,
-		min: 2,
-		max: 64,
-	},
-	slug: {
-		type: "string",
-		trim: true,
-		match: /^[a-zA-Z0-9-]$/,
-	},
-	user: {
-		type: Schema.Types.ObjectId,
-		ref: "User",
-	},
-	status: {
-		type: "string",
-		enum: ["published", "processing", "created"],
-		default: VideoStatus.Processing,
-	},
-});
+	{ timestamps: true }
+);
 
 VideoSchema.pre("save", function (next) {
-	console.log("Pre", this);
-
 	this.slug = slugify(this.title, {
 		locale: "sv",
 		lower: true,
@@ -47,10 +48,6 @@ VideoSchema.pre("save", function (next) {
 	this.id = nanoid(10);
 
 	next();
-});
-
-VideoSchema.post("save", function () {
-	console.log("Post", this);
 });
 
 const VideoModel = mongoose.model("Video", VideoSchema);

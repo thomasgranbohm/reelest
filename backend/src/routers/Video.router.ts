@@ -17,12 +17,16 @@ VideoRouter.get("/", Pagination, async (req, res) => {
 		VideoModel.find(
 			{ status: VideoStatus.Published },
 			{},
-			{ limit: req.pagination.limit, skip: req.pagination.offset }
+			{
+				limit: req.pagination.limit,
+				skip: req.pagination.offset,
+				sort: { updatedAt: "desc" },
+			}
 		),
 		VideoModel.count({ status: VideoStatus.Published }),
 	]);
 
-	res.send({
+	return res.send({
 		data: videos,
 		pagination: {
 			total: count,

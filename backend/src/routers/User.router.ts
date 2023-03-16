@@ -1,6 +1,12 @@
 import { Router } from "express";
 import Joi from "joi";
 
+import Pagination from "middlewares/Pagination.js";
+
+import VideoModel from "models/Video.model.js";
+
+import { LoginValidationSchema, RegisterValidationSchema } from "types/user.js";
+
 import Authentication from "../middlewares/Authentication.js";
 import UserModel from "../models/User.model.js";
 import { decodeToken, signToken } from "../services/JWT.js";
@@ -17,6 +23,31 @@ UserRouter.get("/", Authentication, async (req, res) => {
 	}
 
 	return res.send({ data: { user: user.toObject() } });
+});
+
+UserRouter.get("/videos", Authentication, Pagination, async (req, res) => {
+	const payload = await decodeToken(req.auth.token);
+
+	const [videos, count] = await Promise.all([
+		VideoModel.find(
+			{ user: { _id: payload._id } },
+			{},
+			{
+				limit: req.pagination.limit,
+				skip: req.pagination.offset,
+				sort: { updatedAt: "desc" },
+			}
+		),
+		VideoModel.count({ user: { _id: payload._id } }),
+	]);
+
+	return res.send({
+		data: videos,
+		pagination: {
+			total: count,
+			offset: req.pagination.offset + req.pagination.limit,
+		},
+	});
 });
 
 UserRouter.delete("/", Authentication, async (req, res) => {
@@ -38,11 +69,6 @@ UserRouter.delete("/", Authentication, async (req, res) => {
 			.send({ error: { message: "User could not be deleted" } });
 	}
 });
-
-interface LoginValidationSchema {
-	identifier: string;
-	password: string;
-}
 
 UserRouter.post("/login", async (req, res) => {
 	const { value, error } = Joi.object<LoginValidationSchema>({
@@ -80,13 +106,6 @@ UserRouter.post("/login", async (req, res) => {
 
 	return res.status(200).send({ data: { token } });
 });
-
-export interface RegisterValidationSchema {
-	email: string;
-	username: string;
-	password: string;
-	confirm_password: string;
-}
 
 UserRouter.post("/register", async (req, res) => {
 	const { value, error } = Joi.object<RegisterValidationSchema>({
