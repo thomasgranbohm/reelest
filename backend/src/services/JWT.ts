@@ -20,7 +20,9 @@ export const signToken = async (payload: TokenSchema) => {
 	});
 };
 
-export async function verifyToken(token: string): Promise<{ error?: string }> {
+export async function verifyToken(
+	token: string
+): Promise<{ error?: string; payload?: TokenSchema }> {
 	return new Promise((res) =>
 		jwt.verify(
 			token,
@@ -28,9 +30,9 @@ export async function verifyToken(token: string): Promise<{ error?: string }> {
 			{
 				algorithms: ["HS256"],
 			},
-			(error) => {
+			(error, decoded) => {
 				if (error) return res({ error: error.message });
-				return res({});
+				return res({ payload: decoded as TokenSchema });
 			}
 		)
 	);

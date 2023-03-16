@@ -10,6 +10,38 @@ const config = {
 		ip: "127.0.0.1",
 		port: process.env.PORT || 1337,
 	},
+	ffmpeg: {
+		qualities: [
+			{
+				bitrate: 45000,
+				height: 2160,
+			},
+			{
+				bitrate: 16000,
+				height: 1440,
+			},
+			{
+				bitrate: 8000,
+				height: 1080,
+			},
+			{
+				bitrate: 5000,
+				height: 720,
+			},
+			{
+				bitrate: 2500,
+				height: 480,
+			},
+			{
+				bitrate: 1000,
+				height: 360,
+			},
+			{
+				bitrate: 500,
+				height: 240,
+			},
+		],
+	},
 	jsonwebtoken: {
 		secret: process.env.JWT_SECRET || "abcdefgh01234567",
 	},

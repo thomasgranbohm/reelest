@@ -5,13 +5,15 @@ import path from "path";
 
 import { getMediaPath } from "helpers/Video.helper.js";
 
+import getTokenString from "lib/getTokenString.js";
+
 import Authentication from "middlewares/Authentication.js";
 import Pagination from "middlewares/Pagination.js";
 import { VideoUpload } from "middlewares/Upload.js";
 
 import VideoModel from "models/Video.model.js";
 
-import { decodeToken } from "services/JWT.js";
+import { decodeToken, verifyToken } from "services/JWT.js";
 
 import { VideoCreateBody, VideoStatus, VideoUpdateBody } from "types/video.js";
 
@@ -72,18 +74,44 @@ VideoRouter.get("/:id/:slug", async (req, res) => {
 });
 
 VideoRouter.get(
-	"/:id/:slug/stream/:stream(index.m3u8|index[0-9]+.ts)",
+	"/:id/:slug/stream/:stream(master.m3u8|stream_[0-9]+/(data[0-9]+.ts|stream.m3u8))",
 	async (req, res) => {
 		const { id, slug, stream } = req.params;
 
-		const video = await VideoModel.findOne({
-			id,
-			slug,
-			status: VideoStatus.Published,
-		});
+		const video = await VideoModel.findOne(
+			{
+				id,
+				slug,
+			},
+			{},
+			{ populate: { path: "user", select: "_id" } }
+		);
 
-		if (video === null) {
+		const token = getTokenString(req);
+		const { error, payload } = await verifyToken(token);
+
+		if (token && error) {
+			return res
+				.status(401)
+				.send({ error: { message: "Token not valid" } });
+		}
+
+		if (
+			video === null ||
+			error ||
+			(video.status !== VideoStatus.Published &&
+				payload._id !== video.user._id.toString())
+		) {
 			return res.status(404).send({ error: { message: "Not found" } });
+		}
+
+		if (
+			video.status === VideoStatus.Processing &&
+			(error || payload._id === video.user._id.toString())
+		) {
+			return res
+				.status(425)
+				.send({ error: { message: "Video still processing" } });
 		}
 
 		try {

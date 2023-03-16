@@ -19,10 +19,7 @@ export async function handleVideoUpload(video: MongooseSchema<IVideoSchema>) {
 	// Create destination dir
 	await fs.mkdir(destDir);
 
-	await generateStreamFiles(
-		video.mediaPath,
-		getMediaPath(video, "index.m3u8")
-	);
+	await generateStreamFiles(video.mediaPath, getMediaPath(video));
 
 	await fs.rm(video.mediaPath);
 
