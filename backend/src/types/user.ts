@@ -1,7 +1,7 @@
 export interface IUserSchema {
-	username: string;
 	email: string;
 	password: string;
+	username: string;
 }
 
 export interface LoginValidationSchema {
@@ -10,8 +10,8 @@ export interface LoginValidationSchema {
 }
 
 export interface RegisterValidationSchema {
-	email: string;
-	username: string;
-	password: string;
 	confirm_password: string;
+	email: string;
+	password: string;
+	username: string;
 }

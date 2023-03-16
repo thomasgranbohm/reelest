@@ -1,28 +1,29 @@
 import { Types } from "mongoose";
 
 export enum VideoStatus {
-	Published = "published",
-	Processing = "processing",
 	Created = "created",
+	Processing = "processing",
+	Published = "published",
 }
 
 export interface IVideoSchema {
-	id: string;
-	title: string;
-	slug: string;
 	description?: string;
-	user: Types.ObjectId;
+	id: string;
+	mediaPath: string;
+	slug: string;
 	status: VideoStatus;
+	title: string;
+	user: Types.ObjectId;
 }
 
 export interface VideoCreateBody {
-	title: string;
 	description?: string;
 	slug: string;
+	title: string;
 }
 
 export interface VideoUpdateBody {
-	title: string;
 	description: string;
 	slug: string;
+	title: string;
 }

@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import { decode } from "punycode";
 
 import { TokenPayload, TokenSchema } from "types/jsonwebtoken.js";
 
