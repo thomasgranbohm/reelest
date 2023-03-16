@@ -44,8 +44,8 @@ UserRouter.get("/videos", Authentication, Pagination, async (req, res) => {
 	return res.send({
 		data: videos,
 		pagination: {
-			total: count,
 			offset: req.pagination.offset + req.pagination.limit,
+			total: count,
 		},
 	});
 });
@@ -71,7 +71,7 @@ UserRouter.delete("/", Authentication, async (req, res) => {
 });
 
 UserRouter.post("/login", async (req, res) => {
-	const { value, error } = Joi.object<LoginValidationSchema>({
+	const { error, value } = Joi.object<LoginValidationSchema>({
 		identifier: Joi.alternatives()
 			.try(Joi.string().email(), Joi.string().alphanum().min(3).max(30))
 			.required(),
@@ -90,8 +90,8 @@ UserRouter.post("/login", async (req, res) => {
 	}
 
 	const user = await UserModel.findOne({
-		password: value.password,
 		$or: [{ email: value.identifier }, { username: value.identifier }],
+		password: value.password,
 	});
 
 	if (user === null) {
@@ -108,8 +108,10 @@ UserRouter.post("/login", async (req, res) => {
 });
 
 UserRouter.post("/register", async (req, res) => {
-	const { value, error } = Joi.object<RegisterValidationSchema>({
-		username: Joi.string().alphanum().min(3).max(30).required(),
+	const { error, value } = Joi.object<RegisterValidationSchema>({
+		confirm_password: Joi.string()
+			.pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
+			.required(),
 		email: Joi.string()
 			.email({
 				minDomainSegments: 2,
@@ -119,9 +121,7 @@ UserRouter.post("/register", async (req, res) => {
 		password: Joi.string()
 			.pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
 			.required(),
-		confirm_password: Joi.string()
-			.pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
-			.required(),
+		username: Joi.string().alphanum().min(3).max(30).required(),
 	}).validate(req.body);
 
 	if (error || value.password !== value.confirm_password) {

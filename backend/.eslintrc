@@ -33,7 +33,11 @@
 							["^\\u0000"]
 						]
 					}
-				]
+				],
+				"sort-keys-fix/sort-keys-fix": "warn",
+				"typescript-sort-keys/interface": "error",
+				"typescript-sort-keys/string-enum": "error",
+				"sort-destructure-keys/sort-destructure-keys": 2
 			}
 		}
 	]

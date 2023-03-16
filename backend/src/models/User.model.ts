@@ -5,27 +5,27 @@ import { IUserSchema } from "types/user.js";
 
 export const UserSchema = new Schema<IUserSchema>(
 	{
-		username: {
-			type: "string",
-			required: true,
-			unique: true,
-			min: 3,
-			max: 30,
-			trim: true,
-			validate: validator.isAlphanumeric,
-		},
 		email: {
-			type: "string",
-			trim: true,
 			required: true,
+			trim: true,
+			type: "string",
 			unique: true,
 			validate: validator.isEmail,
 		},
 		password: {
-			type: "string",
 			required: true,
 			trim: true,
+			type: "string",
 			validate: /^[a-zA-Z0-9]{3,30}$/g,
+		},
+		username: {
+			max: 30,
+			min: 3,
+			required: true,
+			trim: true,
+			type: "string",
+			unique: true,
+			validate: validator.isAlphanumeric,
 		},
 	},
 	{ timestamps: true }

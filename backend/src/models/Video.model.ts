@@ -8,34 +8,34 @@ import { IVideoSchema, VideoStatus } from "types/video.js";
 
 export const VideoSchema = new Schema<IVideoSchema>(
 	{
-		id: {
-			type: "string",
-		},
 		description: {
 			type: "string",
 		},
-		title: {
+		id: {
 			type: "string",
-			required: true,
-			min: 2,
-			max: 64,
-		},
-		slug: {
-			type: "string",
-			trim: true,
-			match: /^[a-zA-Z0-9-]$/,
-		},
-		user: {
-			type: Schema.Types.ObjectId,
-			ref: "User",
-		},
-		status: {
-			type: "string",
-			enum: ["published", "processing", "created"],
-			default: VideoStatus.Processing,
 		},
 		mediaPath: {
 			type: "string",
+		},
+		slug: {
+			match: /^[a-zA-Z0-9-]$/,
+			trim: true,
+			type: "string",
+		},
+		status: {
+			default: VideoStatus.Processing,
+			enum: ["published", "processing", "created"],
+			type: "string",
+		},
+		title: {
+			max: 64,
+			min: 2,
+			required: true,
+			type: "string",
+		},
+		user: {
+			ref: "User",
+			type: Schema.Types.ObjectId,
 		},
 	},
 	{ timestamps: true }

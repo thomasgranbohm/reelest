@@ -1,8 +1,9 @@
 import { Router } from "express";
 import fs from "fs/promises";
-import { getMediaPath } from "helpers/Video.helper.js";
 import Joi from "joi";
 import path from "path";
+
+import { getMediaPath } from "helpers/Video.helper.js";
 
 import Authentication from "middlewares/Authentication.js";
 import Pagination from "middlewares/Pagination.js";
@@ -23,12 +24,12 @@ VideoRouter.get("/", Pagination, async (req, res) => {
 			{},
 			{
 				limit: req.pagination.limit,
-				skip: req.pagination.offset,
-				sort: { updatedAt: "desc" },
 				populate: {
 					path: "user",
 					select: "username -_id",
 				},
+				skip: req.pagination.offset,
+				sort: { updatedAt: "desc" },
 			}
 		),
 		VideoModel.count({ status: VideoStatus.Published }),
@@ -37,8 +38,8 @@ VideoRouter.get("/", Pagination, async (req, res) => {
 	return res.send({
 		data: videos,
 		pagination: {
-			total: count,
 			offset: req.pagination.offset + req.pagination.limit,
+			total: count,
 		},
 	});
 });
@@ -65,9 +66,9 @@ VideoRouter.get("/:id/:slug", async (req, res) => {
 		return res.status(404).send({ error: { message: "Not found" } });
 	}
 
-	const { title, status, user } = video;
+	const { status, title, user } = video;
 
-	return res.send({ data: { video: { title, id, slug, status, user } } });
+	return res.send({ data: { video: { id, slug, status, title, user } } });
 });
 
 VideoRouter.get(
@@ -100,7 +101,7 @@ VideoRouter.post(
 	Authentication,
 	VideoUpload.single("file"),
 	async (req, res) => {
-		const { value, error } = Joi.object<VideoCreateBody>({
+		const { error, value } = Joi.object<VideoCreateBody>({
 			description: Joi.string(),
 			title: Joi.string().min(2).max(64).required(),
 		}).validate(req.body);
@@ -116,25 +117,25 @@ VideoRouter.post(
 
 		const token = await decodeToken(req.auth.token);
 
-		const { title, id, slug, status } = await new VideoModel({
-			user: { _id: token._id },
+		const { id, slug, status, title } = await new VideoModel({
 			mediaPath: req.file.path,
+			user: { _id: token._id },
 			...value,
 		}).save();
 
-		return res.send({ data: { video: { title, id, slug, status } } });
+		return res.send({ data: { video: { id, slug, status, title } } });
 	}
 );
 
 VideoRouter.put("/:id/:slug", Authentication, async (req, res) => {
-	const { value, error } = Joi.object<VideoUpdateBody>({
+	const { error, value } = Joi.object<VideoUpdateBody>({
 		description: Joi.string(),
-		title: Joi.string().min(2).max(64),
 		slug: Joi.string()
 			.trim()
 			.min(2)
 			.max(64)
 			.regex(/^[a-zA-Z0-9-]$/),
+		title: Joi.string().min(2).max(64),
 	}).validate(req.body);
 
 	if (error) {
