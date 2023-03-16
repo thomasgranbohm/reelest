@@ -1,36 +1,27 @@
 import fs from "fs/promises";
-import { Document, Types } from "mongoose";
-import { resolve } from "path";
+import { getMediaPath } from "helpers/Video.helper.js";
 
 import VideoModel from "models/Video.model.js";
 
 import { generateStreamFiles } from "services/FFmpeg.js";
 
+import { MongooseSchema } from "types/mongoose.js";
 import { IVideoSchema, VideoStatus } from "types/video.js";
 
-export async function handleVideoUpload(
-	video: Document<unknown, unknown, IVideoSchema> &
-		Omit<
-			IVideoSchema & {
-				_id: Types.ObjectId;
-			},
-			never
-		>
-) {
+export async function handleVideoUpload(video: MongooseSchema<IVideoSchema>) {
 	if (video.status !== VideoStatus.Processing) {
 		return null;
 	}
 
-	const destDir = resolve(
-		process.cwd(),
-		"media",
-		`${video.slug}-${video.id}`
-	);
+	const destDir = getMediaPath(video);
 
 	// Create destination dir
 	await fs.mkdir(destDir);
 
-	await generateStreamFiles(video.mediaPath, resolve(destDir, "index.m3u8"));
+	await generateStreamFiles(
+		video.mediaPath,
+		getMediaPath(video, "index.m3u8")
+	);
 
 	await fs.rm(video.mediaPath);
 

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import fs from "fs/promises";
+import { getMediaPath } from "helpers/Video.helper.js";
 import Joi from "joi";
 import path from "path";
 
@@ -24,6 +25,10 @@ VideoRouter.get("/", Pagination, async (req, res) => {
 				limit: req.pagination.limit,
 				skip: req.pagination.offset,
 				sort: { updatedAt: "desc" },
+				populate: {
+					path: "user",
+					select: "username -_id",
+				},
 			}
 		),
 		VideoModel.count({ status: VideoStatus.Published }),
@@ -41,19 +46,28 @@ VideoRouter.get("/", Pagination, async (req, res) => {
 VideoRouter.get("/:id/:slug", async (req, res) => {
 	const { id, slug } = req.params;
 
-	const video = await VideoModel.findOne({
-		id,
-		slug,
-		status: VideoStatus.Published,
-	});
+	const video = await VideoModel.findOne(
+		{
+			id,
+			slug,
+			status: VideoStatus.Published,
+		},
+		{},
+		{
+			populate: {
+				path: "user",
+				select: "username -_id",
+			},
+		}
+	);
 
 	if (video === null) {
 		return res.status(404).send({ error: { message: "Not found" } });
 	}
 
-	const { title, status } = video;
+	const { title, status, user } = video;
 
-	return res.send({ data: { video: { title, id, slug, status } } });
+	return res.send({ data: { video: { title, id, slug, status, user } } });
 });
 
 VideoRouter.get(
@@ -72,9 +86,9 @@ VideoRouter.get(
 		}
 
 		try {
-			fs.stat(path.resolve(video.mediaPath, stream));
+			fs.stat(path.resolve(getMediaPath(video), stream));
 
-			return res.sendFile(path.resolve(video.mediaPath, stream));
+			return res.sendFile(path.resolve(getMediaPath(video), stream));
 		} catch (error) {
 			return res.status(404).send({ error: { message: "Not found" } });
 		}

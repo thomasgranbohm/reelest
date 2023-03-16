@@ -19,7 +19,9 @@
 		"strict": true,
 		"isolatedModules": true,
 		"esModuleInterop": true,
+		"removeComments": true,
 		"paths": {
+			"helpers/*": ["./helpers/*"],
 			"lib/*": ["./lib/*"],
 			"models/*": ["./models/*"],
 			"middlewares/*": ["./middlewares/*"],
