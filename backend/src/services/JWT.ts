@@ -1,11 +1,12 @@
-import jwt, { VerifyErrors } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import { decode } from "punycode";
 
 import { TokenPayload, TokenSchema } from "types/jsonwebtoken.js";
 
 import config from "../config.js";
 
-export const decodeToken = async (token: string) => {
-	const payload = await jwt.decode(token, { json: true });
+export const decodeToken = (token: string) => {
+	const payload = jwt.decode(token, { json: true });
 
 	if (payload === null) {
 		throw new Error("Token payload is null");
@@ -20,8 +21,18 @@ export const signToken = async (payload: TokenSchema) => {
 	});
 };
 
-export const verifyToken = (token: string) => {
-	return jwt.verify(token, config.jsonwebtoken.secret, {
-		algorithms: ["HS256"],
-	});
-};
+export async function verifyToken(token: string): Promise<{ error?: string }> {
+	return new Promise((res) =>
+		jwt.verify(
+			token,
+			config.jsonwebtoken.secret,
+			{
+				algorithms: ["HS256"],
+			},
+			(error) => {
+				if (error) return res({ error: error.message });
+				return res({});
+			}
+		)
+	);
+}

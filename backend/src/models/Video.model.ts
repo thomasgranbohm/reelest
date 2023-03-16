@@ -39,7 +39,7 @@ VideoSchema.pre("save", function (next) {
 	this.slug = slugify(this.title, {
 		locale: "sv",
 		lower: true,
-		remove: /[^a-zA-Z0-9]/g,
+		remove: /[^a-zA-Z0-9-]/g,
 		strict: true,
 		trim: true,
 	});

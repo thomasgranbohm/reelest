@@ -15,8 +15,14 @@ export interface IVideoSchema {
 	status: VideoStatus;
 }
 
-export interface VideoCreationBody {
+export interface VideoCreateBody {
 	title: string;
 	description?: string;
+	slug: string;
+}
+
+export interface VideoUpdateBody {
+	title: string;
+	description: string;
 	slug: string;
 }
