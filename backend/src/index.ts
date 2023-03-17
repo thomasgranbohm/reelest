@@ -2,10 +2,10 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import cors from "cors";
-import express, { NextFunction, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 
-import { CustomError } from "helpers/Error.helper.js";
+import { CustomError } from "lib/Errors.js";
 
 import UserRouter from "routers/User.router.js";
 import VideoRouter from "routers/Video.router.js";
@@ -25,9 +25,9 @@ server.use("/video", VideoRouter);
 server.get("/", (_, res) => res.send("Hello, World!"));
 
 // Error handling
-server.use((err, _, res: Response, next: NextFunction) => {
-	if ("status" in err && "message" in err) {
-		const { status, ...error } = err as CustomError;
+server.use((err: unknown, _: Request, res: Response, next: NextFunction) => {
+	if (err instanceof CustomError) {
+		const { status, ...error } = err;
 
 		return res.status(status).send({ error });
 	}

@@ -1,25 +1,25 @@
 import fs from "fs/promises";
+import { HydratedDocumentFromSchema } from "mongoose";
 
-import { getMediaPath } from "helpers/Video.helper.js";
-
-import VideoModel from "models/Video.model.js";
+import VideoModel, { VideoSchema } from "models/Video.model.js";
 
 import { generateStreamFiles } from "services/FFmpeg.js";
 
-import { MongooseSchema } from "types/mongoose.js";
-import { IVideoSchema, VideoStatus } from "types/video.js";
+import { VideoStatus } from "types/video.js";
 
-export async function handleVideoUpload(video: MongooseSchema<IVideoSchema>) {
+export async function handleVideoUpload(
+	video: HydratedDocumentFromSchema<typeof VideoSchema>
+): Promise<boolean> {
 	if (video.status !== VideoStatus.Processing) {
-		return null;
+		return false;
 	}
 
-	const destDir = getMediaPath(video);
+	const destDir = video.getMediaPath();
 
 	// Create destination dir
 	await fs.mkdir(destDir);
 
-	await generateStreamFiles(video.mediaPath, getMediaPath(video));
+	await generateStreamFiles(video.mediaPath, destDir);
 
 	await fs.rm(video.mediaPath);
 
@@ -30,4 +30,6 @@ export async function handleVideoUpload(video: MongooseSchema<IVideoSchema>) {
 			status: VideoStatus.Published,
 		}
 	);
+
+	return true;
 }

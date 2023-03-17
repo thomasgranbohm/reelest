@@ -16,6 +16,10 @@ export interface IVideoSchema {
 	user: Types.ObjectId;
 }
 
+export interface IVideoMethods {
+	getMediaPath(...paths: string[]): string;
+}
+
 export interface VideoCreateBody {
 	description?: string;
 	slug: string;

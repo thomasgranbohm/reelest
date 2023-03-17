@@ -1,17 +1,23 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Model, Schema } from "mongoose";
 import { nanoid } from "nanoid";
+import path from "path";
 import slugify from "slugify";
 
 import { handleVideoUpload } from "services/FileSystem.js";
 
-import { IVideoSchema, VideoStatus } from "types/video.js";
+import { IVideoMethods, IVideoSchema, VideoStatus } from "types/video.js";
 
-export const VideoSchema = new Schema<IVideoSchema>(
+export const VideoSchema = new Schema<
+	IVideoSchema,
+	Model<IVideoSchema, Record<string, never>, IVideoMethods>,
+	IVideoMethods
+>(
 	{
 		description: {
 			type: "string",
 		},
 		id: {
+			required: true,
 			type: "string",
 		},
 		mediaPath: {
@@ -25,6 +31,7 @@ export const VideoSchema = new Schema<IVideoSchema>(
 		status: {
 			default: VideoStatus.Processing,
 			enum: ["published", "processing", "created"],
+			required: true,
 			type: "string",
 		},
 		title: {
@@ -38,8 +45,19 @@ export const VideoSchema = new Schema<IVideoSchema>(
 			type: Schema.Types.ObjectId,
 		},
 	},
-	{ timestamps: true }
+	{
+		timestamps: true,
+	}
 );
+
+VideoSchema.method("getMediaPath", function (...paths: string[]) {
+	return path.resolve(
+		process.cwd(),
+		"media",
+		`${this.slug}-${this.id}`,
+		...paths
+	);
+});
 
 VideoSchema.pre("save", function (next) {
 	this.slug = slugify(this.title, {

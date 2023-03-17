@@ -39,8 +39,17 @@ export const UserSchema = new Schema<IUserSchema>(
 			validate: validator.isAlphanumeric,
 		},
 	},
-	{ timestamps: true }
+	{
+		timestamps: true,
+	}
 );
+
+UserSchema.virtual("followerCount").get(function () {
+	return this.followers.length;
+});
+UserSchema.virtual("followingCount").get(function () {
+	return this.following.length;
+});
 
 UserSchema.pre("save", async function (next) {
 	const _password = this.password.slice();
