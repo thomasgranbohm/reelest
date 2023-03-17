@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import cors from "cors";
-import express from "express";
+import express, { NextFunction, Response } from "express";
 import mongoose from "mongoose";
 
 import UserRouter from "routers/User.router.js";
@@ -21,6 +21,17 @@ server.use("/user", UserRouter);
 server.use("/video", VideoRouter);
 
 server.get("/", (_, res) => res.send("Hello, World!"));
+
+// Error handling
+server.use((err, _, res: Response, next: NextFunction) => {
+	if ("status" in err && "message" in err) {
+		return res
+			.status(err.status)
+			.send({ error: { message: err.message, payload: err.payload } });
+	}
+
+	next(err);
+});
 
 const main = async () => {
 	await mongoose.connect(

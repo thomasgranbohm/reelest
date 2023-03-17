@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt";
-import config from "config.js";
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
 
 import { IUserSchema } from "types/user.js";
+
+import config from "../config.js";
 
 export const UserSchema = new Schema<IUserSchema>(
 	{

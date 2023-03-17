@@ -2,6 +2,13 @@ import bcrypt from "bcrypt";
 import { Router } from "express";
 import Joi from "joi";
 
+import {
+	InternalServerError,
+	InvalidCredentialsError,
+	MalformedBodyError,
+	NotFoundError,
+} from "helpers/Error.helper.js";
+
 import Authentication from "middlewares/Authentication.js";
 import Pagination from "middlewares/Pagination.js";
 
@@ -20,7 +27,7 @@ UserRouter.get("/", Authentication, async (req, res) => {
 	const user = await UserModel.findById(payload._id);
 
 	if (user === null) {
-		return res.status(404).send({ error: { message: "User not found" } });
+		throw NotFoundError();
 	}
 
 	return res.send({ data: { user: user.toObject() } });
@@ -62,12 +69,7 @@ UserRouter.post("/login", async (req, res) => {
 	}).validate(req.body);
 
 	if (error) {
-		return res.status(400).send({
-			error: {
-				message: "Malformed body",
-				stack: error,
-			},
-		});
+		throw MalformedBodyError(error);
 	}
 
 	const user = await UserModel.findOne(
@@ -79,16 +81,12 @@ UserRouter.post("/login", async (req, res) => {
 	);
 
 	if (user === null) {
-		return res
-			.status(401)
-			.send({ error: { message: "Invalid credentials" } });
+		throw InvalidCredentialsError();
 	}
 
 	const passwordMatch = await bcrypt.compare(value.password, user.password);
 	if (!passwordMatch) {
-		return res
-			.status(401)
-			.send({ error: { message: "Invalid credentials" } });
+		throw InvalidCredentialsError();
 	}
 
 	const token = await signToken({
@@ -123,11 +121,7 @@ UserRouter.post("/register", async (req, res) => {
 	}).validate(req.body);
 
 	if (error || value.password !== value.confirm_password) {
-		return res.status(400).send({
-			error: {
-				message: "Malformed body.",
-			},
-		});
+		throw MalformedBodyError();
 	}
 
 	const user = await new UserModel(value).save();
@@ -141,7 +135,7 @@ UserRouter.delete("/", Authentication, async (req, res) => {
 	const user = await UserModel.findById(payload._id);
 
 	if (user === null) {
-		return res.status(404).send({ error: { message: "User not found" } });
+		throw NotFoundError();
 	}
 
 	try {
@@ -151,9 +145,9 @@ UserRouter.delete("/", Authentication, async (req, res) => {
 
 		return res.status(200).send({ data: { message: "User deleted" } });
 	} catch (error) {
-		return res
-			.status(500)
-			.send({ error: { message: "User could not be deleted" } });
+		console.log("Could not delete user %s", user.username);
+
+		throw InternalServerError();
 	}
 });
 

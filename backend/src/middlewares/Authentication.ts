@@ -1,5 +1,7 @@
 import { RequestHandler } from "express";
 
+import { ForbiddenError, UnauthorizedError } from "helpers/Error.helper.js";
+
 import getTokenString from "lib/getTokenString.js";
 
 import { verifyToken } from "services/JWT.js";
@@ -8,13 +10,13 @@ const Authentication: RequestHandler = async (req, res, next) => {
 	const token = getTokenString(req);
 
 	if (token === null) {
-		return res.status(401).send({ error: { message: "Unauthorized" } });
+		throw UnauthorizedError();
 	}
 
 	const { error } = await verifyToken(token);
 
 	if (error) {
-		return res.status(403).send({ error: { message: "Forbidden" } });
+		throw ForbiddenError();
 	}
 
 	req.auth = { token };

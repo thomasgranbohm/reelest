@@ -3,6 +3,12 @@ import fs from "fs/promises";
 import Joi from "joi";
 import path from "path";
 
+import {
+	MalformedBodyError,
+	NotFoundError,
+	StillProcessingError,
+	UnauthorizedError,
+} from "helpers/Error.helper.js";
 import { getMediaPath } from "helpers/Video.helper.js";
 
 import getTokenString from "lib/getTokenString.js";
@@ -65,7 +71,7 @@ VideoRouter.get("/:id/:slug", async (req, res) => {
 	);
 
 	if (video === null) {
-		return res.status(404).send({ error: { message: "Not found" } });
+		throw NotFoundError();
 	}
 
 	const { status, title, user } = video;
@@ -91,9 +97,7 @@ VideoRouter.get(
 		const { error, payload } = await verifyToken(token);
 
 		if (token && error) {
-			return res
-				.status(401)
-				.send({ error: { message: "Token not valid" } });
+			throw UnauthorizedError();
 		}
 
 		if (
@@ -102,16 +106,14 @@ VideoRouter.get(
 			(video.status !== VideoStatus.Published &&
 				payload._id !== video.user._id.toString())
 		) {
-			return res.status(404).send({ error: { message: "Not found" } });
+			throw NotFoundError();
 		}
 
 		if (
 			video.status === VideoStatus.Processing &&
 			(error || payload._id === video.user._id.toString())
 		) {
-			return res
-				.status(425)
-				.send({ error: { message: "Video still processing" } });
+			throw StillProcessingError();
 		}
 
 		try {
@@ -119,7 +121,7 @@ VideoRouter.get(
 
 			return res.sendFile(path.resolve(getMediaPath(video), stream));
 		} catch (error) {
-			return res.status(404).send({ error: { message: "Not found" } });
+			throw NotFoundError();
 		}
 	}
 );
@@ -135,12 +137,8 @@ VideoRouter.post(
 		}).validate(req.body);
 
 		if (error || !req.file) {
-			return res.status(400).send({
-				error: {
-					message: "Malformed body",
-					stack: error,
-				},
-			});
+			// TODO: missing file error
+			throw MalformedBodyError(error);
 		}
 
 		const token = await decodeToken(req.auth.token);
@@ -167,12 +165,7 @@ VideoRouter.put("/:id/:slug", Authentication, async (req, res) => {
 	}).validate(req.body);
 
 	if (error) {
-		return res.status(400).send({
-			error: {
-				message: "Malformed body",
-				stack: error,
-			},
-		});
+		throw MalformedBodyError(error);
 	}
 
 	const { id, slug } = req.params;
@@ -203,7 +196,7 @@ VideoRouter.delete("/:id/:slug", Authentication, async (req, res) => {
 	});
 
 	if (video === null) {
-		return res.status(403).send({ error: { message: "Unauthorized" } });
+		throw UnauthorizedError();
 	}
 
 	await video.deleteOne();
