@@ -17,7 +17,6 @@ export const VideoSchema = new Schema<
 			type: "string",
 		},
 		id: {
-			required: true,
 			type: "string",
 		},
 		mediaPath: {

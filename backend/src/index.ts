@@ -39,7 +39,7 @@ const main = async () => {
 	await mongoose.connect(
 		`mongodb://${config.database.host}:${config.database.port}`,
 		{
-			appName: config.database.name,
+			dbName: config.database.name,
 			pass: config.database.pass,
 			user: config.database.user,
 		}

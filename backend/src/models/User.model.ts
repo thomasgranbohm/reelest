@@ -8,7 +8,7 @@ import config from "../config.js";
 
 export const UserSchema = new Schema<IUserSchema>(
 	{
-		display_name: {
+		displayName: {
 			match: /^(?=.{4,48}$)(?!.*[ -]{2})[a-zA-Z][a-zA-Z0-9 -]*[a-zA-Z0-9]$/,
 			required: true,
 			type: "string",
@@ -26,7 +26,6 @@ export const UserSchema = new Schema<IUserSchema>(
 			required: true,
 			trim: true,
 			type: "string",
-			validate: /^[a-zA-Z0-9]{3,30}$/g,
 		},
 		username: {
 			match: /^[a-zA-Z0-9_-]{3,30}$/,

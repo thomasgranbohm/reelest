@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export interface IUserSchema {
-	display_name: string;
+	displayName: string;
 	email: string;
 	followers: Types.DocumentArray<IUserSchema>;
 	following: Types.DocumentArray<IUserSchema>;
@@ -15,8 +15,8 @@ export interface LoginValidationSchema {
 }
 
 export interface RegisterValidationSchema {
-	confirm_password: string;
-	display_name: string;
+	confirmPassword: string;
+	displayName: string;
 	email: string;
 	password: string;
 	username: string;

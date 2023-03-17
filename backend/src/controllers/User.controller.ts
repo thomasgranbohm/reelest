@@ -21,8 +21,8 @@ import { LoginValidationSchema, RegisterValidationSchema } from "types/user.js";
 // Create
 const createUser = PromiseHandler(async (req: Request, res: Response) => {
 	const { error, value } = Joi.object<RegisterValidationSchema>({
-		confirm_password: Joi.string().valid(Joi.ref("password")).required(),
-		display_name: Joi.string()
+		confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+		displayName: Joi.string()
 			.pattern(
 				new RegExp(
 					"^(?=.{4,48}$)(?!.*[ -]{2})[a-zA-Z][a-zA-Z0-9 -]*[a-zA-Z0-9]$"
@@ -102,7 +102,7 @@ const getUser = PromiseHandler(async (req: Request, res: Response) => {
 	const user = await UserModel.findOne(
 		{ username },
 		{},
-		{ fields: ["username display_name followerCount followingCount"] }
+		{ fields: ["username displayName followerCount followingCount"] }
 	);
 
 	if (user === null) {
