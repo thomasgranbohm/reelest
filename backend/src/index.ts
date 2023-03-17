@@ -20,7 +20,7 @@ server.use(express.urlencoded({ extended: true }));
 server.use("/user", UserRouter);
 server.use("/video", VideoRouter);
 
-server.get("/", (req, res) => res.send("Hello, World!"));
+server.get("/", (_, res) => res.send("Hello, World!"));
 
 const main = async () => {
 	await mongoose.connect(

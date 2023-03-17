@@ -1,15 +1,16 @@
+import bcrypt from "bcrypt";
 import { Router } from "express";
 import Joi from "joi";
 
+import Authentication from "middlewares/Authentication.js";
 import Pagination from "middlewares/Pagination.js";
 
+import UserModel from "models/User.model.js";
 import VideoModel from "models/Video.model.js";
 
-import { LoginValidationSchema, RegisterValidationSchema } from "types/user.js";
+import { decodeToken, signToken } from "services/JWT.js";
 
-import Authentication from "../middlewares/Authentication.js";
-import UserModel from "../models/User.model.js";
-import { decodeToken, signToken } from "../services/JWT.js";
+import { LoginValidationSchema, RegisterValidationSchema } from "types/user.js";
 
 const UserRouter = Router();
 
@@ -50,26 +51,6 @@ UserRouter.get("/videos", Authentication, Pagination, async (req, res) => {
 	});
 });
 
-UserRouter.delete("/", Authentication, async (req, res) => {
-	const payload = await decodeToken(req.auth.token);
-
-	const user = await UserModel.findById(payload._id);
-
-	if (user === null) {
-		return res.status(404).send({ error: { message: "User not found" } });
-	}
-
-	try {
-		await user.deleteOne();
-
-		return res.status(200).send({ data: { message: "User deleted" } });
-	} catch (error) {
-		return res
-			.status(500)
-			.send({ error: { message: "User could not be deleted" } });
-	}
-});
-
 UserRouter.post("/login", async (req, res) => {
 	const { error, value } = Joi.object<LoginValidationSchema>({
 		identifier: Joi.alternatives()
@@ -89,12 +70,22 @@ UserRouter.post("/login", async (req, res) => {
 		});
 	}
 
-	const user = await UserModel.findOne({
-		$or: [{ email: value.identifier }, { username: value.identifier }],
-		password: value.password,
-	});
+	const user = await UserModel.findOne(
+		{
+			$or: [{ email: value.identifier }, { username: value.identifier }],
+		},
+		{},
+		{ fields: ["password"] }
+	);
 
 	if (user === null) {
+		return res
+			.status(401)
+			.send({ error: { message: "Invalid credentials" } });
+	}
+
+	const passwordMatch = await bcrypt.compare(value.password, user.password);
+	if (!passwordMatch) {
 		return res
 			.status(401)
 			.send({ error: { message: "Invalid credentials" } });
@@ -111,6 +102,13 @@ UserRouter.post("/register", async (req, res) => {
 	const { error, value } = Joi.object<RegisterValidationSchema>({
 		confirm_password: Joi.string()
 			.pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
+			.required(),
+		display_name: Joi.string()
+			.pattern(
+				new RegExp(
+					"^(?=.{4,48}$)(?!.*[ -]{2})[a-zA-Z][a-zA-Z0-9 -]*[a-zA-Z0-9]$"
+				)
+			)
 			.required(),
 		email: Joi.string()
 			.email({
@@ -132,11 +130,31 @@ UserRouter.post("/register", async (req, res) => {
 		});
 	}
 
-	const user = new UserModel(value);
-
-	await user.save();
+	const user = await new UserModel(value).save();
 
 	return res.status(201).send({ data: { user: user.toObject() } });
+});
+
+UserRouter.delete("/", Authentication, async (req, res) => {
+	const payload = await decodeToken(req.auth.token);
+
+	const user = await UserModel.findById(payload._id);
+
+	if (user === null) {
+		return res.status(404).send({ error: { message: "User not found" } });
+	}
+
+	try {
+		await user.deleteOne();
+
+		// TODO: Remove cookie
+
+		return res.status(200).send({ data: { message: "User deleted" } });
+	} catch (error) {
+		return res
+			.status(500)
+			.send({ error: { message: "User could not be deleted" } });
+	}
 });
 
 export default UserRouter;
