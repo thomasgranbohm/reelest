@@ -5,6 +5,8 @@ import cors from "cors";
 import express, { NextFunction, Response } from "express";
 import mongoose from "mongoose";
 
+import { CustomError } from "helpers/Error.helper.js";
+
 import UserRouter from "routers/User.router.js";
 import VideoRouter from "routers/Video.router.js";
 
@@ -25,9 +27,9 @@ server.get("/", (_, res) => res.send("Hello, World!"));
 // Error handling
 server.use((err, _, res: Response, next: NextFunction) => {
 	if ("status" in err && "message" in err) {
-		return res
-			.status(err.status)
-			.send({ error: { message: err.message, payload: err.payload } });
+		const { status, ...error } = err as CustomError;
+
+		return res.status(status).send({ error });
 	}
 
 	next(err);

@@ -20,6 +20,8 @@ export const UserSchema = new Schema<IUserSchema>(
 			unique: true,
 			validate: validator.isEmail,
 		},
+		followers: [{ ref: "User", type: Schema.Types.ObjectId }],
+		following: [{ ref: "User", type: Schema.Types.ObjectId }],
 		password: {
 			required: true,
 			trim: true,

@@ -1,16 +1,14 @@
-import { create } from "domain";
-
-interface CustomError {
+export interface CustomError {
+	details?: object | string;
 	message: string;
-	payload?: object;
 	status: number;
 }
 
 const createCustomError =
 	(status: number, message: string) =>
-	(payload?: object): CustomError => ({
+	(details?: object | string): CustomError => ({
+		details,
 		message,
-		payload,
 		status,
 	});
 
@@ -32,4 +30,4 @@ export const InternalServerError = createCustomError(
 	"Internal server error"
 );
 
-export default create;
+export default createCustomError;

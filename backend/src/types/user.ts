@@ -1,6 +1,10 @@
+import { Types } from "mongoose";
+
 export interface IUserSchema {
 	display_name: string;
 	email: string;
+	followers: Types.DocumentArray<IUserSchema>;
+	following: Types.DocumentArray<IUserSchema>;
 	password: string;
 	username: string;
 }
