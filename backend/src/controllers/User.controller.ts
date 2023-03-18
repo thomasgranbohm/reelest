@@ -54,7 +54,7 @@ const createUserFollower = PromiseHandler(
 		const { username } = req.params;
 
 		const user = await prisma.user.update({
-			data: { followedByIDs: { push: [req.auth.payload._id] } },
+			data: { followedByIDs: { push: [req.auth.payload.id] } },
 			select: {
 				_count: {
 					select: {
@@ -171,7 +171,7 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 // Delete
 const deleteUser = PromiseHandler(async (req: Request, res: Response) => {
 	try {
-		await prisma.user.delete({ where: { id: req.auth.payload._id } });
+		await prisma.user.delete({ where: { id: req.auth.payload.id } });
 
 		// TODO: Remove cookie
 
@@ -215,8 +215,8 @@ const authenticateUser = PromiseHandler(async (req: Request, res: Response) => {
 	const { email, id, username } = user;
 
 	const token = await signToken({
-		_id: id,
 		email,
+		id,
 		username,
 	});
 

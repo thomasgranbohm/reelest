@@ -50,7 +50,7 @@ const createVideo = PromiseHandler(async (req, res) => {
 				strict: true,
 				trim: true,
 			}),
-			userId: req.auth.payload._id,
+			userId: req.auth.payload.id,
 		},
 		select: { id: true, slug: true, status: true, title: true },
 	});
@@ -119,15 +119,14 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 	if (
 		video === null ||
 		error ||
-		(video.status !== VideoStatus.PUBLISHED &&
-			payload._id !== video.user.id)
+		(video.status !== VideoStatus.PUBLISHED && payload.id !== video.user.id)
 	) {
 		throw NotFoundError();
 	}
 
 	if (
 		video.status === VideoStatus.PROCESSING &&
-		(error || payload._id === video.user.id.toString())
+		(error || payload.id === video.user.id.toString())
 	) {
 		throw StillProcessingError();
 	}
@@ -157,7 +156,7 @@ const updateVideo = PromiseHandler(async (req, res) => {
 
 	const video = await prisma.video.updateMany({
 		data: value,
-		where: { id, userId: req.auth.payload._id },
+		where: { id, userId: req.auth.payload.id },
 	});
 
 	return res.send({ data: { video } });
@@ -176,7 +175,7 @@ const deleteVideo = PromiseHandler(async (req, res) => {
 		throw NotFoundError();
 	}
 
-	if (video.userId !== req.auth.payload._id) {
+	if (video.userId !== req.auth.payload.id) {
 		throw UnauthorizedError();
 	}
 
