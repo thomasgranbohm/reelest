@@ -1,5 +1,10 @@
+import { VideoStatus } from "@prisma/client";
 import fs from "fs/promises";
 import Joi from "joi";
+import { nanoid } from "nanoid";
+import slugify from "slugify";
+
+import prisma from "database/client.js";
 
 import {
 	MalformedBodyError,
@@ -7,20 +12,22 @@ import {
 	StillProcessingError,
 	UnauthorizedError,
 } from "lib/Errors.js";
+import getMediaPath from "lib/getMediaPath.js";
 import getTokenString from "lib/getTokenString.js";
 import PromiseHandler from "lib/PromiseHandler.js";
 
-import VideoModel from "models/Video.model.js";
+import { handleVideoUpload } from "services/FileSystem.js";
+import { verifyToken } from "services/JWT.js";
 
-import { decodeToken, verifyToken } from "services/JWT.js";
+import { VideoCreateBody, VideoUpdateBody } from "types/video.js";
 
-import { VideoCreateBody, VideoStatus, VideoUpdateBody } from "types/video.js";
+import config from "../config.js";
 
 // Create
 const createVideo = PromiseHandler(async (req, res) => {
 	const { error, value } = Joi.object<VideoCreateBody>({
-		description: Joi.string(),
-		title: Joi.string().min(2).max(64).required(),
+		description: config.validation.video.description,
+		title: config.validation.video.title,
 	}).validate(req.body);
 
 	if (error) {
@@ -32,39 +39,45 @@ const createVideo = PromiseHandler(async (req, res) => {
 		throw MalformedBodyError("File is missing");
 	}
 
-	const token = await decodeToken(req.auth.token);
+	const video = await prisma.video.create({
+		data: {
+			...value,
+			id: nanoid(10),
+			slug: slugify(value.title, {
+				locale: "sv",
+				lower: true,
+				remove: /[^a-zA-Z0-9\s]/g,
+				strict: true,
+				trim: true,
+			}),
+			userId: req.auth.payload._id,
+		},
+		select: { id: true, slug: true, status: true, title: true },
+	});
 
-	const { id, slug, status, title } = await new VideoModel({
-		mediaPath: req.file.path,
-		user: { _id: token._id },
-		...value,
-	}).save();
+	handleVideoUpload(video, req.file);
 
-	return res.send({ data: { video: { id, slug, status, title } } });
+	return res.send({ data: { video } });
 });
 
 // Read
 const getVideos = PromiseHandler(async (req, res) => {
 	const [videos, count] = await Promise.all([
-		VideoModel.find(
-			{ status: VideoStatus.Published },
-			{},
-			{
-				limit: req.pagination.limit,
-				populate: {
-					path: "user",
-					select: "username -_id",
-				},
-				skip: req.pagination.offset,
-				sort: { updatedAt: "desc" },
-			}
-		),
-		VideoModel.count({ status: VideoStatus.Published }),
+		prisma.video.findMany({
+			orderBy: { updatedAt: "desc" },
+			skip: req.pagination.offset,
+			take: req.pagination.limit,
+			where: { status: "PROCESSING" },
+		}),
+		prisma.video.count({
+			where: { status: "PROCESSING" },
+		}),
 	]);
 
 	return res.send({
 		data: videos,
 		pagination: {
+			limit: req.pagination.limit,
 			offset: req.pagination.offset + req.pagination.limit,
 			total: count,
 		},
@@ -74,20 +87,10 @@ const getVideos = PromiseHandler(async (req, res) => {
 const getVideo = PromiseHandler(async (req, res) => {
 	const { id, slug } = req.params;
 
-	const video = await VideoModel.findOne(
-		{
-			id,
-			slug,
-			status: VideoStatus.Published,
-		},
-		{},
-		{
-			populate: {
-				path: "user",
-				select: "username -_id",
-			},
-		}
-	);
+	const video = await prisma.video.findFirst({
+		include: { user: { select: { username: true } } },
+		where: { id, slug, status: VideoStatus.PUBLISHED },
+	});
 
 	if (video === null) {
 		throw NotFoundError();
@@ -101,14 +104,10 @@ const getVideo = PromiseHandler(async (req, res) => {
 const getVideoStream = PromiseHandler(async (req, res) => {
 	const { id, slug, stream } = req.params;
 
-	const video = await VideoModel.findOne(
-		{
-			id,
-			slug,
-		},
-		{},
-		{ populate: { path: "user", select: "_id" } }
-	);
+	const video = await prisma.video.findFirst({
+		include: { user: { select: { id: true } } },
+		where: { id, slug },
+	});
 
 	const token = getTokenString(req);
 	const { error, payload } = await verifyToken(token);
@@ -120,21 +119,21 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 	if (
 		video === null ||
 		error ||
-		(video.status !== VideoStatus.Published &&
-			payload._id !== video.user._id.toString())
+		(video.status !== VideoStatus.PUBLISHED &&
+			payload._id !== video.user.id)
 	) {
 		throw NotFoundError();
 	}
 
 	if (
-		video.status === VideoStatus.Processing &&
-		(error || payload._id === video.user._id.toString())
+		video.status === VideoStatus.PROCESSING &&
+		(error || payload._id === video.user.id.toString())
 	) {
 		throw StillProcessingError();
 	}
 
 	try {
-		const streamPath = video.getMediaPath(stream);
+		const streamPath = getMediaPath(video, stream);
 		fs.stat(streamPath);
 
 		return res.sendFile(streamPath);
@@ -146,50 +145,42 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 // Update
 const updateVideo = PromiseHandler(async (req, res) => {
 	const { error, value } = Joi.object<VideoUpdateBody>({
-		description: Joi.string(),
-		slug: Joi.string()
-			.trim()
-			.min(2)
-			.max(64)
-			.regex(/^[a-zA-Z0-9-]$/),
-		title: Joi.string().min(2).max(64),
+		description: config.validation.video.description,
+		title: config.validation.video.title,
 	}).validate(req.body);
 
 	if (error) {
 		throw MalformedBodyError(error);
 	}
 
-	const { id, slug } = req.params;
+	const { id } = req.params;
 
-	const video = await VideoModel.updateOne(
-		{
-			id,
-			slug,
-			user: { _id: req.auth.payload._id },
-		},
-		value
-	);
+	const video = await prisma.video.updateMany({
+		data: value,
+		where: { id, userId: req.auth.payload._id },
+	});
 
 	return res.send({ data: { video } });
 });
 
 // Delete
 const deleteVideo = PromiseHandler(async (req, res) => {
-	const { id, slug } = req.params;
+	const { id } = req.params;
 
-	const token = await decodeToken(req.auth.token);
-
-	const video = await VideoModel.findOne({
-		id,
-		slug,
-		user: { _id: token._id },
+	const video = await prisma.video.findFirst({
+		select: { id: true, userId: true },
+		where: { id },
 	});
 
 	if (video === null) {
+		throw NotFoundError();
+	}
+
+	if (video.userId !== req.auth.payload._id) {
 		throw UnauthorizedError();
 	}
 
-	await video.deleteOne();
+	await prisma.video.delete({ where: { id: video.id } });
 
 	return res.status(200).send({ data: { message: "Deleted video" } });
 });

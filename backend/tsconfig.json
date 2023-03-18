@@ -21,8 +21,8 @@
 		"removeComments": true,
 		"paths": {
 			"controllers/*": ["./controllers/*"],
+			"database/*": ["./database/*"],
 			"lib/*": ["./lib/*"],
-			"models/*": ["./models/*"],
 			"middlewares/*": ["./middlewares/*"],
 			"routers/*": ["./routers/*"],
 			"services/*": ["./services/*"],

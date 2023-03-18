@@ -1,0 +1,6 @@
+FROM mongo:5
+
+ENTRYPOINT mongod --port $MONGO_REPLICA_PORT --replSet rs0 --bind_ip_all & MONGOD_PID=$!; \
+INIT_REPL_CMD="rs.initiate()"; \
+until (mongo admin --port $MONGO_REPLICA_PORT --eval "$INIT_REPL_CMD"); do sleep 1; done; \
+echo "REPLICA SET ONLINE"; wait $MONGOD_PID;

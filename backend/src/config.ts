@@ -1,3 +1,5 @@
+import Joi from "joi";
+
 const config = {
 	bcrypt: { saltRounds: 10 },
 	database: {
@@ -49,6 +51,34 @@ const config = {
 	upload: {
 		dest: process.env.UPLOAD_DIR || "/tmp/uploads",
 		video_mimetypes: ["video/mp4"],
+	},
+	validation: {
+		user: {
+			displayName: Joi.string()
+				.pattern(
+					/^(?=.{4,48}$)(?!.*[ -]{2})[a-zA-Z][a-zA-Z0-9 -]*[a-zA-Z0-9]$/
+				)
+				.required(),
+			email: Joi.string()
+				.email({
+					minDomainSegments: 2,
+					tlds: { allow: ["com", "dev", "test", "net", "xyz"] },
+				})
+				.trim()
+				.required(),
+			password: Joi.string()
+				.pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
+				.required(),
+			username: Joi.string()
+				.min(3)
+				.max(30)
+				.pattern(/^[a-zA-Z0-9_-]{3,30}$/)
+				.required(),
+		},
+		video: {
+			description: Joi.string(),
+			title: Joi.string().min(2).max(64).required(),
+		},
 	},
 };
 

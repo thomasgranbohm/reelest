@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import Joi from "joi";
 
+import prisma from "database/client.js";
+
 import {
 	CustomError,
 	InternalServerError,
@@ -11,87 +13,62 @@ import {
 } from "lib/Errors.js";
 import PromiseHandler from "lib/PromiseHandler.js";
 
-import UserModel from "models/User.model.js";
-import VideoModel from "models/Video.model.js";
-
-import { decodeToken, signToken } from "services/JWT.js";
+import { signToken } from "services/JWT.js";
 
 import { LoginValidationSchema, RegisterValidationSchema } from "types/user.js";
 
+import config from "../config.js";
+
 // Create
 const createUser = PromiseHandler(async (req: Request, res: Response) => {
-	const { error, value } = Joi.object<RegisterValidationSchema>({
+	const { error, value } = Joi.object<
+		Omit<RegisterValidationSchema, "confirmPassword">,
+		true,
+		RegisterValidationSchema
+	>({
 		confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-		displayName: Joi.string()
-			.pattern(
-				new RegExp(
-					"^(?=.{4,48}$)(?!.*[ -]{2})[a-zA-Z][a-zA-Z0-9 -]*[a-zA-Z0-9]$"
-				)
-			)
-			.required(),
-		email: Joi.string()
-			.email({
-				minDomainSegments: 2,
-				tlds: { allow: ["com", "dev", "test", "net", "xyz"] },
-			})
-			.required(),
-		password: Joi.string()
-			.pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
-			.required(),
-		username: Joi.string().alphanum().min(3).max(30).required(),
+		displayName: config.validation.user.displayName,
+		email: config.validation.user.email,
+		password: config.validation.user.password,
+		username: config.validation.user.username,
 	}).validate(req.body);
 
 	if (error) {
 		throw MalformedBodyError(error.details);
 	}
 
-	const user = await new UserModel(value).save();
+	const { displayName, email, password: _password, username } = value;
 
-	return res.status(201).send({ data: { user: user.toObject() } });
+	const password = await bcrypt.hash(_password, config.bcrypt.saltRounds);
+
+	const user = await prisma.user.create({
+		data: { displayName, email, password, username },
+		select: { displayName: true, email: true, username: true },
+	});
+
+	return res.status(201).send({ data: { user } });
 });
 
 const createUserFollower = PromiseHandler(
 	async (req: Request, res: Response) => {
 		const { username } = req.params;
-		const { _id } = await decodeToken(req.auth.token);
 
-		const users = await Promise.all([
-			UserModel.findOne(
-				{ username },
-				{},
-				{
-					fields: ["_id followers"],
-					populate: {
-						path: "followers",
-						select: "_id",
+		const user = await prisma.user.update({
+			data: { followedByIDs: { push: [req.auth.payload._id] } },
+			select: {
+				_count: {
+					select: {
+						followedBy: true,
 					},
-				}
-			),
-			UserModel.findById(
-				_id,
-				{},
-				{
-					fields: ["_id following"],
-					populate: {
-						path: "following",
-						select: "_id",
-					},
-				}
-			),
-		]);
+				},
+				id: true,
+			},
+			where: {
+				username,
+			},
+		});
 
-		if (!users.every(Boolean)) {
-			throw NotFoundError();
-		}
-
-		const [user, currentUser] = users;
-
-		currentUser.following.push(user._id);
-		user.followers.push(currentUser._id);
-
-		await Promise.all([currentUser.save(), user.save()]);
-
-		return res.status(201).send({ data: { message: "Subscribed" } });
+		return res.status(201).send({ data: { user } });
 	}
 );
 
@@ -99,89 +76,93 @@ const createUserFollower = PromiseHandler(
 const getUser = PromiseHandler(async (req: Request, res: Response) => {
 	const { username } = req.params;
 
-	const user = await UserModel.findOne(
-		{ username },
-		{},
-		{ fields: ["username displayName followerCount followingCount"] }
-	);
+	const user = await prisma.user.findFirst({
+		select: {
+			_count: {
+				select: {
+					followedBy: true,
+					following: true,
+				},
+			},
+			displayName: true,
+			username: true,
+		},
+		where: { username },
+	});
 
 	if (user === null) {
 		throw NotFoundError();
 	}
 
-	return res.send({ data: { user: user.toObject() } });
+	return res.send({ data: { user } });
 });
 
+// TODO: Needs pagination
 const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 	const { username } = req.params;
 
-	const user = await UserModel.findOne(
-		{ username },
-		{},
-		{
-			fields: ["followers"],
-			populate: {
-				path: "followers",
-				select: "_id username",
-			},
-		}
-	);
+	const user = await prisma.user.findUnique({
+		select: {
+			followedBy: { select: { displayName: true, username: true } },
+		},
+		where: { username },
+	});
 
 	if (user === null) {
-		throw InternalServerError(
-			"Could not find authenticated user. Probably deleted but still authenticated"
-		);
+		throw NotFoundError();
 	}
 
-	return res.send({ data: user.followers });
+	return res.send({ data: user.followedBy });
 });
 
+// TODO: Needs pagination
 const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 	const { username } = req.params;
 
-	const user = await UserModel.findOne(
-		{ username },
-		{},
-		{
-			fields: ["following"],
-			populate: {
-				path: "following",
-				select: "_id username",
-			},
-		}
-	);
+	const user = await prisma.user.findUnique({
+		select: {
+			following: { select: { displayName: true, username: true } },
+		},
+		where: { username },
+	});
 
 	if (user === null) {
-		throw InternalServerError(
-			"Could not find authenticated user. Probably deleted but still authenticated"
-		);
+		throw NotFoundError();
 	}
 
 	return res.send({ data: user.following });
 });
 
+// TODO: Needs pagination
 const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 	const { username } = req.params;
-	const user = await UserModel.findOne({ username }, {}, { fields: ["_id"] });
+
+	const user = await prisma.user.findUnique({
+		select: {
+			id: true,
+		},
+		where: { username },
+	});
+
+	if (user === null) {
+		throw NotFoundError();
+	}
 
 	const [videos, count] = await Promise.all([
-		VideoModel.find(
-			{ user },
-			{},
-			{
-				fields: ["title slug createdAt"],
-				limit: req.pagination.limit,
-				skip: req.pagination.offset,
-				sort: { updatedAt: "desc" },
-			}
-		),
-		VideoModel.count({ user }),
+		prisma.video.findMany({
+			orderBy: { createdAt: "desc" },
+			select: { createdAt: true, slug: true, title: true },
+			skip: req.pagination.offset,
+			take: req.pagination.limit,
+		}),
+		prisma.video.count(),
 	]);
 
 	return res.send({
 		data: videos,
 		pagination: {
 			offset: req.pagination.offset + req.pagination.limit,
+			take: req.pagination.limit,
 			total: count,
 		},
 	});
@@ -189,22 +170,14 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 
 // Delete
 const deleteUser = PromiseHandler(async (req: Request, res: Response) => {
-	const payload = await decodeToken(req.auth.token);
-
-	const user = await UserModel.findById(payload._id);
-
-	if (user === null) {
-		throw NotFoundError();
-	}
-
 	try {
-		await user.deleteOne();
+		await prisma.user.delete({ where: { id: req.auth.payload._id } });
 
 		// TODO: Remove cookie
 
 		return res.status(200).send({ data: { message: "User deleted" } });
 	} catch (error) {
-		console.log("Could not delete user %s", user.username);
+		console.log("Could not delete user %s", req.auth.payload.username);
 
 		throw InternalServerError();
 	}
@@ -214,24 +187,21 @@ const deleteUser = PromiseHandler(async (req: Request, res: Response) => {
 const authenticateUser = PromiseHandler(async (req: Request, res: Response) => {
 	const { error, value } = Joi.object<LoginValidationSchema>({
 		identifier: Joi.alternatives()
-			.try(Joi.string().email(), Joi.string().alphanum().min(3).max(30))
+			.try(config.validation.user.username, config.validation.user.email)
 			.required(),
-		password: Joi.string()
-			.pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
-			.required(),
+		password: config.validation.user.password,
 	}).validate(req.body);
 
 	if (error) {
 		throw new CustomError(400, "Malformed body");
 	}
 
-	const user = await UserModel.findOne(
-		{
-			$or: [{ email: value.identifier }, { username: value.identifier }],
+	const user = await prisma.user.findFirst({
+		select: { email: true, id: true, password: true, username: true },
+		where: {
+			OR: [{ email: value.identifier }, { username: value.identifier }],
 		},
-		{},
-		{ fields: ["password"] }
-	);
+	});
 
 	if (user === null) {
 		throw InvalidCredentialsError();
@@ -242,8 +212,12 @@ const authenticateUser = PromiseHandler(async (req: Request, res: Response) => {
 		throw InvalidCredentialsError();
 	}
 
+	const { email, id, username } = user;
+
 	const token = await signToken({
-		...user.toObject(),
+		_id: id,
+		email,
+		username,
 	});
 
 	return res.status(200).send({ data: { token } });

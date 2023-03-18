@@ -1,35 +1,35 @@
+import { Video } from "@prisma/client";
 import fs from "fs/promises";
-import { HydratedDocumentFromSchema } from "mongoose";
 
-import VideoModel, { VideoSchema } from "models/Video.model.js";
+import prisma from "database/client.js";
+
+import getMediaPath from "lib/getMediaPath.js";
 
 import { generateStreamFiles } from "services/FFmpeg.js";
 
 import { VideoStatus } from "types/video.js";
 
 export async function handleVideoUpload(
-	video: HydratedDocumentFromSchema<typeof VideoSchema>
+	video: Pick<Video, "status" | "id" | "slug">,
+	file: Express.Multer.File
 ): Promise<boolean> {
 	if (video.status !== VideoStatus.Processing) {
 		return false;
 	}
 
-	const destDir = video.getMediaPath();
+	const destDir = getMediaPath(video);
 
 	// Create destination dir
 	await fs.mkdir(destDir);
 
-	await generateStreamFiles(video.mediaPath, destDir);
+	await generateStreamFiles(file.path, destDir);
 
-	await fs.rm(video.mediaPath);
+	await fs.rm(file.path);
 
-	await VideoModel.updateOne(
-		{ id: video.id, slug: video.slug },
-		{
-			mediaPath: destDir,
-			status: VideoStatus.Published,
-		}
-	);
+	await prisma.video.update({
+		data: { status: "PUBLISHED" },
+		where: { id: video.id },
+	});
 
 	return true;
 }

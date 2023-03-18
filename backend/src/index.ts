@@ -3,7 +3,8 @@ dotenv.config();
 
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
-import mongoose from "mongoose";
+
+import prisma from "database/client.js";
 
 import { CustomError } from "lib/Errors.js";
 
@@ -36,14 +37,7 @@ server.use((err: unknown, _: Request, res: Response, next: NextFunction) => {
 });
 
 const main = async () => {
-	await mongoose.connect(
-		`mongodb://${config.database.host}:${config.database.port}`,
-		{
-			dbName: config.database.name,
-			pass: config.database.pass,
-			user: config.database.user,
-		}
-	);
+	await prisma.$connect();
 
 	server.listen(config.express.port, () =>
 		console.log(
@@ -54,4 +48,14 @@ const main = async () => {
 	);
 };
 
-main();
+main()
+	.then(async () => {
+		await prisma.$disconnect();
+	})
+	.catch(async (e) => {
+		console.error(e);
+
+		await prisma.$disconnect();
+
+		process.exit(1);
+	});
