@@ -1,8 +1,8 @@
 import { JwtPayload } from "jsonwebtoken";
 
 export interface TokenSchema {
-	id: string;
 	email: string;
+	id: string;
 	username: string;
 }
 

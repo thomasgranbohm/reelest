@@ -3,6 +3,8 @@ import fs from "fs/promises";
 import Joi from "joi";
 import { nanoid } from "nanoid";
 
+import config from "config.js";
+
 import prisma from "database/client.js";
 
 import {
@@ -19,8 +21,6 @@ import { handleVideoUpload } from "services/FileSystem.js";
 import { verifyToken } from "services/JWT.js";
 
 import { VideoCreateBody, VideoUpdateBody } from "types/video.js";
-
-import config from "../config.js";
 
 // Create
 const createVideo = PromiseHandler(async (req, res) => {

@@ -3,7 +3,7 @@ import ffmpegPath from "ffmpeg-static";
 import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
 import util from "util";
 
-import config from "../config.js";
+import config from "config.js";
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 

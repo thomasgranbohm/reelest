@@ -1,4 +1,4 @@
-import { Video } from "@prisma/client";
+import { Video, VideoStatus } from "@prisma/client";
 import fs from "fs/promises";
 
 import prisma from "database/client.js";
@@ -7,13 +7,11 @@ import getMediaPath from "lib/getMediaPath.js";
 
 import { generateStreamFiles } from "services/FFmpeg.js";
 
-import { VideoStatus } from "types/video.js";
-
 export async function handleVideoUpload(
 	video: Pick<Video, "status" | "id">,
 	file: Express.Multer.File
 ): Promise<boolean> {
-	if (video.status !== VideoStatus.Processing) {
+	if (video.status !== VideoStatus.PUBLISHED) {
 		return false;
 	}
 

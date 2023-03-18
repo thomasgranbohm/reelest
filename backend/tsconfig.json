@@ -21,6 +21,7 @@
 		"removeComments": true,
 		"paths": {
 			"controllers/*": ["./controllers/*"],
+			"config.js": ["./config.ts"],
 			"database/*": ["./database/*"],
 			"lib/*": ["./lib/*"],
 			"middlewares/*": ["./middlewares/*"],

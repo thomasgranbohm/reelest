@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 
-import { TokenPayload, TokenSchema } from "types/jsonwebtoken.js";
+import config from "config.js";
 
-import config from "../config.js";
+import { TokenPayload, TokenSchema } from "types/jsonwebtoken.js";
 
 export const decodeToken = (token: string) => {
 	const payload = jwt.decode(token, { json: true });

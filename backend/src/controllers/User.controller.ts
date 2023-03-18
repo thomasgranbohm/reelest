@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import Joi from "joi";
 
+import config from "config.js";
+
 import prisma from "database/client.js";
 
 import {
@@ -16,8 +18,6 @@ import PromiseHandler from "lib/PromiseHandler.js";
 import { signToken } from "services/JWT.js";
 
 import { LoginValidationSchema, RegisterValidationSchema } from "types/user.js";
-
-import config from "../config.js";
 
 // Create
 const createUser = PromiseHandler(async (req: Request, res: Response) => {
