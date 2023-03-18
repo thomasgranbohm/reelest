@@ -1,6 +1,6 @@
 # `📽️ reelest`
 
-> Using MENN stack
+> Using Express.js, Prisma, MongoDB
 
 ## Setup
 
