@@ -16,20 +16,38 @@ UserRouter.get("/me", Authentication, (req, res, next) => {
 UserRouter.get("/:username", UserController.getUser);
 
 // Get following
-UserRouter.get("/me/followers", Authentication, (req, res, next) => {
-	req.params.username = req.auth.payload.username;
+UserRouter.get(
+	"/me/followers",
+	Authentication,
+	Pagination,
+	(req, res, next) => {
+		req.params.username = req.auth.payload.username;
 
-	UserController.getUserFollowers(req, res, next);
-});
-UserRouter.get("/:username/followers", UserController.getUserFollowers);
+		UserController.getUserFollowers(req, res, next);
+	}
+);
+UserRouter.get(
+	"/:username/followers",
+	Pagination,
+	UserController.getUserFollowers
+);
 
 // Get followers
-UserRouter.get("/me/following", Authentication, (req, res, next) => {
-	req.params.username = req.auth.payload.username;
+UserRouter.get(
+	"/me/following",
+	Authentication,
+	Pagination,
+	(req, res, next) => {
+		req.params.username = req.auth.payload.username;
 
-	UserController.getUserFollowing(req, res, next);
-});
-UserRouter.get("/:username/following", UserController.getUserFollowing);
+		UserController.getUserFollowing(req, res, next);
+	}
+);
+UserRouter.get(
+	"/:username/following",
+	Pagination,
+	UserController.getUserFollowing
+);
 
 // Get user videos
 UserRouter.get("/me/videos", Authentication, Pagination, (req, res, next) => {

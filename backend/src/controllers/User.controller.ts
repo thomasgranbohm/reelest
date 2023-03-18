@@ -97,13 +97,17 @@ const getUser = PromiseHandler(async (req: Request, res: Response) => {
 	return res.send({ data: { user } });
 });
 
-// TODO: Needs pagination
 const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 	const { username } = req.params;
 
 	const user = await prisma.user.findUnique({
 		select: {
-			followedBy: { select: { displayName: true, username: true } },
+			_count: { select: { followedBy: true } },
+			followedBy: {
+				select: { displayName: true, username: true },
+				skip: req.pagination.skip,
+				take: req.pagination.take,
+			},
 		},
 		where: { username },
 	});
@@ -112,16 +116,25 @@ const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 		throw NotFoundError();
 	}
 
-	return res.send({ data: user.followedBy });
+	return res.send({
+		data: user.followedBy,
+		offset: req.pagination.skip + req.pagination.take,
+		take: req.pagination.take,
+		total: user._count.followedBy,
+	});
 });
 
-// TODO: Needs pagination
 const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 	const { username } = req.params;
 
 	const user = await prisma.user.findUnique({
 		select: {
-			following: { select: { displayName: true, username: true } },
+			_count: { select: { following: true } },
+			following: {
+				select: { displayName: true, username: true },
+				skip: req.pagination.skip,
+				take: req.pagination.take,
+			},
 		},
 		where: { username },
 	});
@@ -130,10 +143,14 @@ const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 		throw NotFoundError();
 	}
 
-	return res.send({ data: user.following });
+	return res.send({
+		data: user.following,
+		offset: req.pagination.skip + req.pagination.take,
+		take: req.pagination.take,
+		total: user._count.following,
+	});
 });
 
-// TODO: Needs pagination
 const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 	const { username } = req.params;
 
@@ -152,8 +169,8 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 		prisma.video.findMany({
 			orderBy: { createdAt: "desc" },
 			select: { createdAt: true, id: true, title: true },
-			skip: req.pagination.offset,
-			take: req.pagination.limit,
+			skip: req.pagination.skip,
+			take: req.pagination.take,
 		}),
 		prisma.video.count(),
 	]);
@@ -161,8 +178,8 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 	return res.send({
 		data: videos,
 		pagination: {
-			offset: req.pagination.offset + req.pagination.limit,
-			take: req.pagination.limit,
+			offset: req.pagination.skip + req.pagination.take,
+			take: req.pagination.take,
 			total: count,
 		},
 	});

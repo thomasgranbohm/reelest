@@ -57,8 +57,8 @@ const getVideos = PromiseHandler(async (req, res) => {
 	const [videos, count] = await Promise.all([
 		prisma.video.findMany({
 			orderBy: { updatedAt: "desc" },
-			skip: req.pagination.offset,
-			take: req.pagination.limit,
+			skip: req.pagination.skip,
+			take: req.pagination.take,
 			where: { status: "PROCESSING" },
 		}),
 		prisma.video.count({
@@ -69,8 +69,8 @@ const getVideos = PromiseHandler(async (req, res) => {
 	return res.send({
 		data: videos,
 		pagination: {
-			limit: req.pagination.limit,
-			offset: req.pagination.offset + req.pagination.limit,
+			limit: req.pagination.take,
+			offset: req.pagination.skip + req.pagination.take,
 			total: count,
 		},
 	});

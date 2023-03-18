@@ -11,8 +11,8 @@ declare namespace Express {
 			token: string;
 		};
 		pagination: {
-			limit: number;
-			offset: number;
+			skip: number;
+			take: number;
 		};
 	}
 }
