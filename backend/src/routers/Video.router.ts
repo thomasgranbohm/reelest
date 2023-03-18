@@ -12,11 +12,11 @@ const VideoRouter = Router();
 VideoRouter.get("/", Pagination, VideoController.getVideos);
 
 // Get video
-VideoRouter.get("/:id/:slug", VideoController.getVideo);
+VideoRouter.get("/:id", VideoController.getVideo);
 
 // Get video stream
 VideoRouter.get(
-	"/:id/:slug/stream/:stream(master.m3u8|stream_[0-9]+/(data[0-9]+.ts|stream.m3u8))",
+	"/:id/stream/:stream(master.m3u8|stream_[0-9]+/(data[0-9]+.ts|stream.m3u8))",
 	VideoController.getVideoStream
 );
 
@@ -29,9 +29,9 @@ VideoRouter.post(
 );
 
 // Update video
-VideoRouter.put("/:id/:slug", Authentication, VideoController.updateVideo);
+VideoRouter.put("/:id", Authentication, VideoController.updateVideo);
 
 // Delete video
-VideoRouter.delete("/:id/:slug", Authentication, VideoController.deleteVideo);
+VideoRouter.delete("/:id", Authentication, VideoController.deleteVideo);
 
 export default VideoRouter;

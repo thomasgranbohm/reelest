@@ -26,7 +26,6 @@ model Video {
     id          String      @id @default(auto()) @map("_id") @db.ObjectId
     createdAt   DateTime    @default(now())
     description String?
-    slug        String
     status      VideoStatus @default(PROCESSING)
     title       String
     updatedAt   DateTime    @default(now())

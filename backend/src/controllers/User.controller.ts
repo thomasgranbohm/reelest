@@ -76,7 +76,7 @@ const createUserFollower = PromiseHandler(
 const getUser = PromiseHandler(async (req: Request, res: Response) => {
 	const { username } = req.params;
 
-	const user = await prisma.user.findFirst({
+	const user = await prisma.user.findUnique({
 		select: {
 			_count: {
 				select: {
@@ -151,7 +151,7 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 	const [videos, count] = await Promise.all([
 		prisma.video.findMany({
 			orderBy: { createdAt: "desc" },
-			select: { createdAt: true, slug: true, title: true },
+			select: { createdAt: true, id: true, title: true },
 			skip: req.pagination.offset,
 			take: req.pagination.limit,
 		}),

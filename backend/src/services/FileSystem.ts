@@ -10,7 +10,7 @@ import { generateStreamFiles } from "services/FFmpeg.js";
 import { VideoStatus } from "types/video.js";
 
 export async function handleVideoUpload(
-	video: Pick<Video, "status" | "id" | "slug">,
+	video: Pick<Video, "status" | "id">,
 	file: Express.Multer.File
 ): Promise<boolean> {
 	if (video.status !== VideoStatus.Processing) {

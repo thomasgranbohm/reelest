@@ -2,7 +2,6 @@ import { VideoStatus } from "@prisma/client";
 import fs from "fs/promises";
 import Joi from "joi";
 import { nanoid } from "nanoid";
-import slugify from "slugify";
 
 import prisma from "database/client.js";
 
@@ -43,16 +42,9 @@ const createVideo = PromiseHandler(async (req, res) => {
 		data: {
 			...value,
 			id: nanoid(10),
-			slug: slugify(value.title, {
-				locale: "sv",
-				lower: true,
-				remove: /[^a-zA-Z0-9\s]/g,
-				strict: true,
-				trim: true,
-			}),
 			userId: req.auth.payload.id,
 		},
-		select: { id: true, slug: true, status: true, title: true },
+		select: { id: true, status: true, title: true },
 	});
 
 	handleVideoUpload(video, req.file);
@@ -85,28 +77,32 @@ const getVideos = PromiseHandler(async (req, res) => {
 });
 
 const getVideo = PromiseHandler(async (req, res) => {
-	const { id, slug } = req.params;
+	const { id } = req.params;
 
-	const video = await prisma.video.findFirst({
+	const video = await prisma.video.findUnique({
 		include: { user: { select: { username: true } } },
-		where: { id, slug, status: VideoStatus.PUBLISHED },
+		where: { id },
 	});
 
-	if (video === null) {
+	if (
+		video === null ||
+		(video.status !== "PUBLISHED" &&
+			req.auth.payload.username === video.user.username)
+	) {
 		throw NotFoundError();
 	}
 
 	const { status, title, user } = video;
 
-	return res.send({ data: { video: { id, slug, status, title, user } } });
+	return res.send({ data: { video: { id, status, title, user } } });
 });
 
 const getVideoStream = PromiseHandler(async (req, res) => {
-	const { id, slug, stream } = req.params;
+	const { id, stream } = req.params;
 
-	const video = await prisma.video.findFirst({
+	const video = await prisma.video.findUnique({
 		include: { user: { select: { id: true } } },
-		where: { id, slug },
+		where: { id },
 	});
 
 	const token = getTokenString(req);
@@ -166,7 +162,7 @@ const updateVideo = PromiseHandler(async (req, res) => {
 const deleteVideo = PromiseHandler(async (req, res) => {
 	const { id } = req.params;
 
-	const video = await prisma.video.findFirst({
+	const video = await prisma.video.findUnique({
 		select: { id: true, userId: true },
 		where: { id },
 	});
