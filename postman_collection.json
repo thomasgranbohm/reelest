@@ -163,6 +163,37 @@
 					"response": []
 				},
 				{
+					"name": "Update user",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"displayName\": \"Another Username\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}",
+							"host": ["{{baseUrl}}{{usersPath}}"]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Delete user",
 					"request": {
 						"auth": {
@@ -170,7 +201,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{token}}",
+									"value": "{{jwt_token}}",
 									"type": "string"
 								}
 							]
@@ -197,7 +228,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{token}}",
+									"value": "{{jwt_token}}",
 									"type": "string"
 								}
 							]
@@ -251,7 +282,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{token}}",
+									"value": "{{jwt_token}}",
 									"type": "string"
 								}
 							]
@@ -259,9 +290,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc",
+							"raw": "{{baseUrl}}{{videosPath}}/6417533e4d27782ddfa39e72",
 							"host": ["{{baseUrl}}{{videosPath}}"],
-							"path": ["641662ce571f7b5698ba31fc"]
+							"path": ["6417533e4d27782ddfa39e72"]
 						}
 					},
 					"response": []
@@ -275,9 +306,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc",
+							"raw": "{{baseUrl}}{{videosPath}}/641752db281ba34605995061",
 							"host": ["{{baseUrl}}{{videosPath}}"],
-							"path": ["641662ce571f7b5698ba31fc"]
+							"path": ["641752db281ba34605995061"]
 						}
 					},
 					"response": []
@@ -310,7 +341,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{token}}",
+									"value": "{{jwt_token}}",
 									"type": "string"
 								}
 							]
@@ -342,7 +373,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{token}}",
+									"value": "{{jwt_token}}",
 									"type": "string"
 								}
 							]
