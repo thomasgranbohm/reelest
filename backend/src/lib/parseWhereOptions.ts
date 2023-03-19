@@ -2,7 +2,7 @@ const parseWhereOptions = <T>(obj: T): T => {
 	return Object.fromEntries(
 		Object.entries(obj)
 			.map((obj) =>
-				typeof obj[1] === "object"
+				obj[1] !== null && typeof obj[1] === "object"
 					? [[obj[0]], parseWhereOptions(obj[1])]
 					: obj
 			)
