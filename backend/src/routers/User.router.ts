@@ -70,6 +70,9 @@ UserRouter.post("/login", UserController.authenticateUser);
 // Create user
 UserRouter.post("/register", UserController.createUser);
 
+// Update user
+UserRouter.put("/", Authentication, UserController.updateUser);
+
 // Delete user
 UserRouter.delete("/", Authentication, UserController.deleteUser);
 

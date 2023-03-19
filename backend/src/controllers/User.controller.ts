@@ -174,7 +174,6 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 		userId: user.id,
 	};
 
-	// TODO: One query
 	const [videos, count] = await Promise.all([
 		prisma.video.findMany({
 			orderBy: { createdAt: "desc" },
@@ -194,11 +193,32 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 	return res.send({
 		data: videos,
 		pagination: {
-			skip: req.pagination.skip,
+			skip: req.pagination.skip + req.pagination.take,
 			take: req.pagination.take,
 			total: count,
 		},
 	});
+});
+
+// Update
+const updateUser = PromiseHandler(async (req, res) => {
+	const { error, value } = Joi.object<{ displayName: string }>({
+		displayName: config.validation.user.displayName,
+	}).validate(req.body);
+
+	if (error) {
+		throw MalformedBodyError(error);
+	}
+
+	const { id } = req.params;
+
+	const user = await prisma.user.update({
+		data: value,
+		select: { displayName: true, email: true, id: true, username: true },
+		where: { id },
+	});
+
+	return res.send({ data: { user } });
 });
 
 // Delete
@@ -265,4 +285,5 @@ export default {
 	getUserFollowers,
 	getUserFollowing,
 	getUserVideos,
+	updateUser,
 };
