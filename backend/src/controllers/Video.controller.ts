@@ -30,9 +30,7 @@ const createVideo = PromiseHandler(async (req, res) => {
 
 	if (error) {
 		throw MalformedBodyError(error);
-	}
-
-	if (!req.file) {
+	} else if (!req.file) {
 		// TODO: missing file error
 		throw MalformedBodyError("File is missing");
 	}
@@ -112,17 +110,13 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 
 	if (token && error) {
 		throw UnauthorizedError();
-	}
-
-	if (
+	} else if (
 		video === null ||
 		error ||
 		(video.status !== VideoStatus.PUBLISHED && payload.id !== video.user.id)
 	) {
 		throw NotFoundError();
-	}
-
-	if (
+	} else if (
 		video.status === VideoStatus.PROCESSING &&
 		(error || payload.id === video.user.id.toString())
 	) {
@@ -152,10 +146,21 @@ const updateVideo = PromiseHandler(async (req, res) => {
 
 	const { id } = req.params;
 
-	// TODO: Needs better return value
-	const video = await prisma.video.updateMany({
+	const existingVideo = await prisma.video.findUnique({
+		select: { userId: true },
+		where: { id },
+	});
+
+	if (existingVideo !== null) {
+		throw NotFoundError();
+	} else if (existingVideo.userId !== req.auth.payload.id) {
+		throw UnauthorizedError();
+	}
+
+	const video = await prisma.video.update({
 		data: value,
-		where: { id, userId: req.auth.payload.id },
+		select: { description: true, id: true, status: true, title: true },
+		where: { id },
 	});
 
 	return res.send({ data: { video } });
@@ -172,9 +177,7 @@ const deleteVideo = PromiseHandler(async (req, res) => {
 
 	if (video === null) {
 		throw NotFoundError();
-	}
-
-	if (video.userId !== req.auth.payload.id) {
+	} else if (video.userId !== req.auth.payload.id) {
 		throw UnauthorizedError();
 	}
 
