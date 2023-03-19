@@ -19,6 +19,7 @@ const Authentication: RequestHandler = PromiseHandler(async (req, _, next) => {
 		throw ForbiddenError();
 	}
 
+	// TODO: Only store userID in jwt token
 	req.auth = { payload, token };
 
 	return next();

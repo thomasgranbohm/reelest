@@ -1,7 +1,5 @@
 interface TokenSchema {
-	email: string;
 	id: string;
-	username: string;
 }
 
 declare namespace Express {

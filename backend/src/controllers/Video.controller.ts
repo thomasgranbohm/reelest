@@ -79,15 +79,14 @@ const getVideo = PromiseHandler(async (req, res) => {
 		select: {
 			status: true,
 			title: true,
-			user: { select: { username: true } },
+			user: { select: { id: true } },
 		},
 		where: { id },
 	});
 
 	if (
 		video === null ||
-		(video.status !== "PUBLISHED" &&
-			req.auth.payload.username === video.user.username)
+		(video.status !== "PUBLISHED" && req.auth.payload.id === video.user.id)
 	) {
 		throw NotFoundError();
 	}

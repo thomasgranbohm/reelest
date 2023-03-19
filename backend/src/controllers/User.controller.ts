@@ -10,7 +10,6 @@ import prisma from "database/client.js";
 import checkUserAuthentification from "lib/checkUserAuthentification.js";
 import {
 	CustomError,
-	InternalServerError,
 	InvalidCredentialsError,
 	MalformedBodyError,
 	NotFoundError,
@@ -210,12 +209,10 @@ const updateUser = PromiseHandler(async (req, res) => {
 		throw MalformedBodyError(error);
 	}
 
-	const { id } = req.params;
-
 	const user = await prisma.user.update({
 		data: value,
 		select: { displayName: true, email: true, id: true, username: true },
-		where: { id },
+		where: { id: req.auth.payload.id },
 	});
 
 	return res.send({ data: { user } });
@@ -230,9 +227,7 @@ const deleteUser = PromiseHandler(async (req: Request, res: Response) => {
 
 		return res.status(200).send({ data: { message: "User deleted" } });
 	} catch (error) {
-		console.log("Could not delete user %s", req.auth.payload.username);
-
-		throw InternalServerError();
+		throw NotFoundError();
 	}
 });
 
@@ -250,7 +245,7 @@ const authenticateUser = PromiseHandler(async (req: Request, res: Response) => {
 	}
 
 	const user = await prisma.user.findFirst({
-		select: { email: true, id: true, password: true, username: true },
+		select: { id: true, password: true },
 		where: {
 			OR: [{ email: value.identifier }, { username: value.identifier }],
 		},
@@ -265,12 +260,10 @@ const authenticateUser = PromiseHandler(async (req: Request, res: Response) => {
 		throw InvalidCredentialsError();
 	}
 
-	const { email, id, username } = user;
+	const { id } = user;
 
 	const token = await signToken({
-		email,
 		id,
-		username,
 	});
 
 	return res.status(200).send({ data: { token } });
