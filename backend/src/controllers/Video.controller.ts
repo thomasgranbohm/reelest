@@ -1,7 +1,6 @@
 import { VideoStatus } from "@prisma/client";
 import fs from "fs/promises";
 import Joi from "joi";
-import { nanoid } from "nanoid";
 
 import config from "config.js";
 
@@ -41,7 +40,6 @@ const createVideo = PromiseHandler(async (req, res) => {
 	const video = await prisma.video.create({
 		data: {
 			...value,
-			id: nanoid(10),
 			userId: req.auth.payload.id,
 		},
 		select: { id: true, status: true, title: true },
@@ -69,8 +67,8 @@ const getVideos = PromiseHandler(async (req, res) => {
 	return res.send({
 		data: videos,
 		pagination: {
-			limit: req.pagination.take,
-			offset: req.pagination.skip + req.pagination.take,
+			skip: req.pagination.skip,
+			take: req.pagination.take,
 			total: count,
 		},
 	});
@@ -80,7 +78,11 @@ const getVideo = PromiseHandler(async (req, res) => {
 	const { id } = req.params;
 
 	const video = await prisma.video.findUnique({
-		include: { user: { select: { username: true } } },
+		select: {
+			status: true,
+			title: true,
+			user: { select: { username: true } },
+		},
 		where: { id },
 	});
 
@@ -150,6 +152,7 @@ const updateVideo = PromiseHandler(async (req, res) => {
 
 	const { id } = req.params;
 
+	// TODO: Needs better return value
 	const video = await prisma.video.updateMany({
 		data: value,
 		where: { id, userId: req.auth.payload.id },
@@ -176,6 +179,8 @@ const deleteVideo = PromiseHandler(async (req, res) => {
 	}
 
 	await prisma.video.delete({ where: { id: video.id } });
+
+	fs.rm(getMediaPath(video), { force: true, recursive: true });
 
 	return res.status(200).send({ data: { message: "Deleted video" } });
 });

@@ -20,8 +20,8 @@ server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 
 // Routers
-server.use("/user", UserRouter);
-server.use("/video", VideoRouter);
+server.use("/users", UserRouter);
+server.use("/videos", VideoRouter);
 
 server.get("/", (_, res) => res.send("Hello, World!"));
 

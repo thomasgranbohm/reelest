@@ -11,7 +11,7 @@ export async function handleVideoUpload(
 	video: Pick<Video, "status" | "id">,
 	file: Express.Multer.File
 ): Promise<boolean> {
-	if (video.status !== VideoStatus.PUBLISHED) {
+	if (video.status !== VideoStatus.PROCESSING) {
 		return false;
 	}
 

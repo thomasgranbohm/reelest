@@ -1,3 +1,4 @@
+import { VideoStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import Joi from "joi";
@@ -6,6 +7,7 @@ import config from "config.js";
 
 import prisma from "database/client.js";
 
+import checkUserAuthentification from "lib/checkUserAuthentification.js";
 import {
 	CustomError,
 	InternalServerError,
@@ -118,7 +120,7 @@ const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 
 	return res.send({
 		data: user.followedBy,
-		offset: req.pagination.skip + req.pagination.take,
+		skip: req.pagination.skip + req.pagination.take,
 		take: req.pagination.take,
 		total: user._count.followedBy,
 	});
@@ -145,7 +147,7 @@ const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 
 	return res.send({
 		data: user.following,
-		offset: req.pagination.skip + req.pagination.take,
+		skip: req.pagination.skip + req.pagination.take,
 		take: req.pagination.take,
 		total: user._count.following,
 	});
@@ -165,20 +167,34 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 		throw NotFoundError();
 	}
 
+	const whereOptions = {
+		status: checkUserAuthentification(req)
+			? undefined
+			: VideoStatus.PUBLISHED,
+		userId: user.id,
+	};
+
+	// TODO: One query
 	const [videos, count] = await Promise.all([
 		prisma.video.findMany({
 			orderBy: { createdAt: "desc" },
-			select: { createdAt: true, id: true, title: true },
+			select: {
+				createdAt: true,
+				id: true,
+				status: checkUserAuthentification(req) ? true : false,
+				title: true,
+			},
 			skip: req.pagination.skip,
 			take: req.pagination.take,
+			where: whereOptions,
 		}),
-		prisma.video.count(),
+		prisma.video.count({ where: whereOptions }),
 	]);
 
 	return res.send({
 		data: videos,
 		pagination: {
-			offset: req.pagination.skip + req.pagination.take,
+			skip: req.pagination.skip,
 			take: req.pagination.take,
 			total: count,
 		},
