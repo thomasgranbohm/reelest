@@ -25,7 +25,7 @@ export async function handleVideoUpload(
 	await fs.rm(file.path);
 
 	await prisma.video.update({
-		data: { status: "PUBLISHED" },
+		data: { status: "CREATED" },
 		where: { id: video.id },
 	});
 

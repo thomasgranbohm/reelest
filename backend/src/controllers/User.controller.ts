@@ -1,4 +1,4 @@
-import { VideoStatus } from "@prisma/client";
+import { Prisma, VideoStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import Joi from "joi";
@@ -14,6 +14,7 @@ import {
 	MalformedBodyError,
 	NotFoundError,
 } from "lib/Errors.js";
+import parseWhereOptions from "lib/parseWhereOptions.js";
 import PromiseHandler from "lib/PromiseHandler.js";
 
 import { signToken } from "services/JWT.js";
@@ -75,7 +76,9 @@ const createUserFollower = PromiseHandler(
 
 // Read
 const getUser = PromiseHandler(async (req: Request, res: Response) => {
-	const { username } = req.params;
+	const { id, username } = req.params;
+
+	const isAuthenticated = checkUserAuthentification(req);
 
 	const user = await prisma.user.findUnique({
 		select: {
@@ -88,7 +91,10 @@ const getUser = PromiseHandler(async (req: Request, res: Response) => {
 			displayName: true,
 			username: true,
 		},
-		where: { username },
+		where: parseWhereOptions<Prisma.UserWhereUniqueInput>({
+			id: isAuthenticated ? id : null,
+			username: !isAuthenticated ? username : null,
+		}),
 	});
 
 	if (user === null) {
@@ -99,7 +105,9 @@ const getUser = PromiseHandler(async (req: Request, res: Response) => {
 });
 
 const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
-	const { username } = req.params;
+	const { id, username } = req.params;
+
+	const isAuthenticated = checkUserAuthentification(req);
 
 	const user = await prisma.user.findUnique({
 		select: {
@@ -110,7 +118,10 @@ const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 				take: req.pagination.take,
 			},
 		},
-		where: { username },
+		where: parseWhereOptions<Prisma.UserWhereUniqueInput>({
+			id: isAuthenticated ? id : null,
+			username: !isAuthenticated ? username : null,
+		}),
 	});
 
 	if (user === null) {
@@ -126,7 +137,9 @@ const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 });
 
 const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
-	const { username } = req.params;
+	const { id, username } = req.params;
+
+	const isAuthenticated = checkUserAuthentification(req);
 
 	const user = await prisma.user.findUnique({
 		select: {
@@ -137,7 +150,10 @@ const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 				take: req.pagination.take,
 			},
 		},
-		where: { username },
+		where: parseWhereOptions<Prisma.UserWhereUniqueInput>({
+			id: isAuthenticated ? id : null,
+			username: !isAuthenticated ? username : null,
+		}),
 	});
 
 	if (user === null) {
@@ -153,25 +169,17 @@ const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 });
 
 const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
-	const { username } = req.params;
+	const { id, username } = req.params;
 
-	const user = await prisma.user.findUnique({
-		select: {
-			id: true,
+	const isAuthenticated = checkUserAuthentification(req);
+
+	const whereOptions = parseWhereOptions<Prisma.VideoWhereInput>({
+		status: !isAuthenticated ? null : VideoStatus.PUBLISHED,
+		user: {
+			username: isAuthenticated ? null : username,
 		},
-		where: { username },
+		userId: isAuthenticated ? id : null,
 	});
-
-	if (user === null) {
-		throw NotFoundError();
-	}
-
-	const whereOptions = {
-		status: checkUserAuthentification(req)
-			? undefined
-			: VideoStatus.PUBLISHED,
-		userId: user.id,
-	};
 
 	const [videos, count] = await Promise.all([
 		prisma.video.findMany({
@@ -179,7 +187,7 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 			select: {
 				createdAt: true,
 				id: true,
-				status: checkUserAuthentification(req) ? true : false,
+				status: isAuthenticated,
 				title: true,
 			},
 			skip: req.pagination.skip,

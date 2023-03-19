@@ -35,9 +35,12 @@ const createVideo = PromiseHandler(async (req, res) => {
 		throw MalformedBodyError("File is missing");
 	}
 
+	const { description, title } = value;
+
 	const video = await prisma.video.create({
 		data: {
-			...value,
+			description,
+			title,
 			userId: req.auth.payload.id,
 		},
 		select: { id: true, status: true, title: true },
@@ -55,10 +58,10 @@ const getVideos = PromiseHandler(async (req, res) => {
 			orderBy: { updatedAt: "desc" },
 			skip: req.pagination.skip,
 			take: req.pagination.take,
-			where: { status: "PROCESSING" },
+			where: { status: "PUBLISHED" },
 		}),
 		prisma.video.count({
-			where: { status: "PROCESSING" },
+			where: { status: "PUBLISHED" },
 		}),
 	]);
 
@@ -77,16 +80,21 @@ const getVideo = PromiseHandler(async (req, res) => {
 
 	const video = await prisma.video.findUnique({
 		select: {
+			description: true,
 			status: true,
 			title: true,
-			user: { select: { id: true } },
+			user: { select: { displayName: true, id: true, username: true } },
 		},
 		where: { id },
 	});
 
+	const token = getTokenString(req);
+	const { error, payload } = await verifyToken(token);
+
 	if (
 		video === null ||
-		(video.status !== "PUBLISHED" && req.auth.payload.id === video.user.id)
+		error ||
+		(video.status !== "PUBLISHED" && payload.id !== video.user.id)
 	) {
 		throw NotFoundError();
 	}
@@ -107,9 +115,7 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 	const token = getTokenString(req);
 	const { error, payload } = await verifyToken(token);
 
-	if (token && error) {
-		throw UnauthorizedError();
-	} else if (
+	if (
 		video === null ||
 		error ||
 		(video.status !== VideoStatus.PUBLISHED && payload.id !== video.user.id)
@@ -117,7 +123,7 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 		throw NotFoundError();
 	} else if (
 		video.status === VideoStatus.PROCESSING &&
-		(error || payload.id === video.user.id.toString())
+		payload.id === video.user.id
 	) {
 		throw StillProcessingError();
 	}
