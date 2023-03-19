@@ -1,0 +1,24 @@
+import { 
+    {{~#if ssr}}GetServerSideProps, {{/if}}NextPage } from "next";
+
+import Layout from "components/Layout";
+
+const {{ properCase name }}Page: NextPage<{{ properCase name }}PageProps> = () => {
+	return <Layout>{/* Remove me*/}</Layout>;
+};
+
+interface {{ properCase name }}PageProps {
+	// Remove me
+}
+
+{{#if ssr}}
+export const getServerSideProps: GetServerSideProps<
+	{{ properCase name }}PageProps | Promise<{{ properCase name }}PageProps>
+> = async () => {
+	return {
+		props: {},
+	};
+};
+{{/if}}
+
+export default {{ properCase name }}Page;

@@ -1,0 +1,29 @@
+@mixin keep-within-width {
+	@media (min-width: theme("screens.sm")) {
+		min-width: theme("screens.sm");
+	}
+
+	@media (min-width: theme("screens.md")) {
+		min-width: theme("screens.md");
+	}
+
+	@media (min-width: theme("screens.lg")) {
+		min-width: theme("screens.lg");
+	}
+
+	@media (min-width: theme("screens.xl")) {
+		min-width: theme("screens.xl");
+	}
+
+	@media (min-width: theme("screens.2xl")) {
+		min-width: theme("screens.2xl");
+	}
+}
+
+@mixin has-general-focus {
+	&:hover,
+	&:focus,
+	&:focus-visible {
+		@content;
+	}
+}

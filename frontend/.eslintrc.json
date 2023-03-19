@@ -1,0 +1,35 @@
+{
+	"extends": ["plugin:storybook/recommended", "next/core-web-vitals"],
+	"plugins": [
+		"simple-import-sort",
+		"sort-keys-fix",
+		"typescript-sort-keys",
+		"sort-destructure-keys"
+	],
+	"overrides": [
+		{
+			"files": ["*.js", "*.jsx", "*.ts", "*.tsx"],
+			"rules": {
+				"simple-import-sort/imports": [
+					"error",
+					{
+						"groups": [
+							["^react", "^@?\\w"],
+							[
+								"^(@|assets|components|hooks|pages|styles|types|utils)(/.*|$)"
+							],
+							["^\\.\\.(?!/?$)", "^\\.\\./?$"],
+							["^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)", "^\\./?$"],
+							["^\\u0000"],
+							["^.+\\.(scss|css)$"]
+						]
+					}
+				],
+				"sort-keys-fix/sort-keys-fix": "warn",
+				"typescript-sort-keys/interface": "error",
+				"typescript-sort-keys/string-enum": "error",
+				"sort-destructure-keys/sort-destructure-keys": 2
+			}
+		}
+	]
+}
