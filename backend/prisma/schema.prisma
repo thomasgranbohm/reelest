@@ -11,14 +11,14 @@ model User {
     id            String   @id @default(auto()) @map("_id") @db.ObjectId
     createdAt     DateTime @default(now())
     displayName   String
-    email         String   @unique(map: "email_1")
+    email         String   @unique
     followedBy    User[]   @relation("UserFollows", fields: [followedByIDs], references: [id])
     followedByIDs String[] @db.ObjectId
     following     User[]   @relation("UserFollows", fields: [followingIDs], references: [id])
     followingIDs  String[] @db.ObjectId
     password      String
     updatedAt     DateTime @default(now())
-    username      String   @unique(map: "username_1")
+    username      String   @unique
     videos        Video[]
 }
 

@@ -43,12 +43,31 @@ const createUser = PromiseHandler(async (req: Request, res: Response) => {
 
 	const password = await bcrypt.hash(_password, config.bcrypt.saltRounds);
 
-	const user = await prisma.user.create({
-		data: { displayName, email, password, username },
-		select: { displayName: true, email: true, username: true },
-	});
+	try {
+		const user = await prisma.user.create({
+			data: { displayName, email, password, username },
+			select: { displayName: true, email: true, username: true },
+		});
 
-	return res.status(201).send({ data: { user } });
+		return res.status(201).send({ data: { user } });
+	} catch (error) {
+		if (error instanceof Prisma.PrismaClientKnownRequestError) {
+			if (error.code === "P2002") {
+				if (error.meta) {
+					const errorMessage =
+						error.meta.target === "User_email_key"
+							? "Email already in use"
+							: error.meta.target === "User_username_key"
+							? "Username already in use"
+							: null;
+
+					throw MalformedBodyError(errorMessage);
+				}
+			}
+		}
+
+		throw error;
+	}
 });
 
 const createUserFollower = PromiseHandler(
