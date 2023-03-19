@@ -1,0 +1,399 @@
+{
+	"info": {
+		"_postman_id": "7fa5c04a-033b-4b77-9e4b-decd8b5e7dfd",
+		"name": "Reeler",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Register user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"thomas\",\n    \"email\": \"thomas@granbohm.dev\",\n    \"password\": \"Password123\",\n    \"confirmPassword\": \"Password123\",\n    \"displayName\": \"Thomas Granbohm\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}/register",
+							"host": ["{{baseUrl}}{{usersPath}}"],
+							"path": ["register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identifier\": \"thomas@granbohm.dev\",\n    \"password\": \"Password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}/login",
+							"host": ["{{baseUrl}}{{usersPath}}"],
+							"path": ["login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get authenticated user",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}/me",
+							"host": ["{{baseUrl}}{{usersPath}}"],
+							"path": ["me"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}/thomas",
+							"host": ["{{baseUrl}}{{usersPath}}"],
+							"path": ["thomas"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user followers",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}/thomas/followers",
+							"host": ["{{baseUrl}}{{usersPath}}"],
+							"path": ["thomas", "followers"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user followings",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}/thomas/following",
+							"host": ["{{baseUrl}}{{usersPath}}"],
+							"path": ["thomas", "following"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get authenticated user videos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}/me/videos",
+							"host": ["{{baseUrl}}{{usersPath}}"],
+							"path": ["me", "videos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user videos",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}/thomas/videos",
+							"host": ["{{baseUrl}}{{usersPath}}"],
+							"path": ["thomas", "videos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{usersPath}}",
+							"host": ["{{baseUrl}}{{usersPath}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Videos",
+			"item": [
+				{
+					"name": "Upload video",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "Big Buck Bunny",
+									"type": "default"
+								},
+								{
+									"key": "description",
+									"value": "Lorem ipsum dolor...",
+									"type": "default"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/home/thomas/Downloads/video.mp4"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}{{videosPath}}",
+							"host": ["{{baseUrl}}{{videosPath}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get videos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{videosPath}}",
+							"host": ["{{baseUrl}}{{videosPath}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get authenticated video",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc",
+							"host": ["{{baseUrl}}{{videosPath}}"],
+							"path": ["641662ce571f7b5698ba31fc"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get video",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc",
+							"host": ["{{baseUrl}}{{videosPath}}"],
+							"path": ["641662ce571f7b5698ba31fc"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get video stream",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc/stream/master.m3u8",
+							"host": ["{{baseUrl}}{{videosPath}}"],
+							"path": [
+								"641662ce571f7b5698ba31fc",
+								"stream",
+								"master.m3u8"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update video",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"New title\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc/",
+							"host": ["{{baseUrl}}{{videosPath}}"],
+							"path": ["641662ce571f7b5698ba31fc", ""]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete video",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc",
+							"host": ["{{baseUrl}}{{videosPath}}"],
+							"path": ["641662ce571f7b5698ba31fc"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:1337"
+		},
+		{
+			"key": "usersPath",
+			"value": "/users"
+		},
+		{
+			"key": "videosPath",
+			"value": "/videos",
+			"type": "default"
+		},
+		{
+			"key": "jwt_token",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRob21hc0BncmFuYm9obS5kZXYiLCJpZCI6IjY0MTYzOWQwNTcxZjdiNTY5OGJhMzFmYiIsInVzZXJuYW1lIjoidGhvbWFzIiwiaWF0IjoxNjc5MTg4NDM4fQ.EZpA_zD4xSBAd6091la-_euKhc96C0G3frei3QSey9w\n",
+			"type": "default"
+		}
+	]
+}
