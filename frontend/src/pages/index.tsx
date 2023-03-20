@@ -1,26 +1,34 @@
-import { Fragment } from "react";
 import { privateAPI } from "api";
 import type { GetServerSideProps, NextPage } from "next";
 
-import Heading from "components/Heading";
+import Layout from "components/Layout";
+import VideoListing from "components/VideoListing";
+import { IVideo } from "types/video";
 
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-	const { data } = await privateAPI.get("/videos");
+export const getServerSideProps: GetServerSideProps<
+	HomePageData
+> = async () => {
+	const { data } = await privateAPI.get<{ data: IVideo[] }>("/videos");
 
 	return {
-		props: data,
+		props: {
+			videos: data.data,
+		},
 	};
 };
 
-const Home: NextPage = (props) => {
+const Home: NextPage<HomePageData> = (props) => {
+	const { videos } = props;
+
 	return (
-		<Fragment>
-			<Heading type="h1">Hello, World!</Heading>
-			<pre>
-				<code>{JSON.stringify(props, null, 4)}</code>
-			</pre>
-		</Fragment>
+		<Layout>
+			<VideoListing videos={videos} label="Latest videos" />
+		</Layout>
 	);
 };
+
+interface HomePageData {
+	videos: IVideo[];
+}
 
 export default Home;

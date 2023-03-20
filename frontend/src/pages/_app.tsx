@@ -14,9 +14,14 @@ const ubuntuFont = Ubuntu({
 function CustomApp({ Component, pageProps }: AppProps) {
 	return (
 		<SSRProvider>
-			<main className={ubuntuFont.className}>
+			<div className={ubuntuFont.className}>
 				<Component {...pageProps} />
-			</main>
+			</div>
+			{process.env.NODE_ENV !== "production" && (
+				<pre>
+					<code>{JSON.stringify(pageProps, null, 4)}</code>
+				</pre>
+			)}
 		</SSRProvider>
 	);
 }

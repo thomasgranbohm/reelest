@@ -41,7 +41,7 @@ const Heading: FC<HeadingProps> = ({
 		type,
 		{
 			className: clsx(
-				"mt-4",
+				"mt-4 font-bold",
 				fontSizes[look || type],
 				color && colors[color],
 				className

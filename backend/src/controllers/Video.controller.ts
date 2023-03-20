@@ -92,7 +92,14 @@ const getVideo = PromiseHandler(async (req, res) => {
 			status: true,
 			thumbnail: true,
 			title: true,
-			user: { select: { displayName: true, id: true, username: true } },
+			user: {
+				select: {
+					_count: { select: { followedBy: true } },
+					displayName: true,
+					id: true,
+					username: true,
+				},
+			},
 		},
 		where: { id },
 	});

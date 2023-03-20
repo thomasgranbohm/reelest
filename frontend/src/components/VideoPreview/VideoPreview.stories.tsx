@@ -12,7 +12,7 @@ export const Primary: ComponentStory<typeof VideoPreview> = (props) => (
 	<VideoPreview
 		{...props}
 		id="abcdefgh01234567"
-		thumbnailUrl="https://placekitten.com/480/270"
+		thumbnail="https://placekitten.com/480/270"
 		title="Test video"
 		user={{ displayName: "John Doe", username: "johndoe" }}
 	/>
