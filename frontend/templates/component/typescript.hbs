@@ -7,11 +7,9 @@ import clsx from "clsx";
 import { {{#if children}}WithChildren{{/if}}{{#if className}}{{#if children}}, {{/if}}WithClassname{{/if}} } from "types/components";
 
 {{/ifOr}}
-import classes from "./{{ properCase name }}.module.scss";
-
 const {{ properCase name }}: FC<{{ properCase name }}Props> = ({{#ifOr children className}}{ {{#if children}}children{{/if}}{{#if className}}{{#if children}}, {{/if}}className{{/if}} }{{/ifOr}}) => {
     return <div className={
-        {{~#if className}}clsx({{/if}}classes["container"]{{#if className}}, className){{/if~}}
+        {{~#if className}}clsx(className){{/if~}}
         }>{{#if children}}{children}{{/if}}</div>;
 };
 
