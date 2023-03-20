@@ -44,11 +44,6 @@ function plopFunction(
 			},
 			{
 				type: "add",
-				templateFile: "templates/component/stories.hbs",
-				path: "src/components/{{#if aria}}aria/{{/if}}{{ properCase name }}/{{ properCase name }}.stories.tsx",
-			},
-			{
-				type: "add",
 				templateFile: "templates/component/styling.hbs",
 				path: "src/components/{{#if aria}}aria/{{/if}}{{ properCase name }}/{{ properCase name }}.module.scss",
 			},

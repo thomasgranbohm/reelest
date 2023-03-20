@@ -1,5 +1,5 @@
 {
-	"extends": ["plugin:storybook/recommended", "next/core-web-vitals"],
+	"extends": ["next/core-web-vitals"],
 	"plugins": [
 		"simple-import-sort",
 		"sort-keys-fix",
