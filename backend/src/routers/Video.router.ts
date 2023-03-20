@@ -4,7 +4,7 @@ import VideoController from "controllers/Video.controller.js";
 
 import Authentication from "middlewares/Authentication.js";
 import Pagination from "middlewares/Pagination.js";
-import { VideoUpload } from "middlewares/Upload.js";
+import { ImageUpload, VideoUpload } from "middlewares/Upload.js";
 
 const VideoRouter = Router();
 
@@ -20,6 +20,11 @@ VideoRouter.get(
 	VideoController.getVideoStream
 );
 
+VideoRouter.get(
+	"/:id/thumbnails/:thumbnail(thumbnail-[0-9]{3,4}.webp|thumbnail.b64)",
+	VideoController.getVideoThumbnail
+);
+
 // Create video
 VideoRouter.post(
 	"/",
@@ -29,7 +34,12 @@ VideoRouter.post(
 );
 
 // Update video
-VideoRouter.put("/:id", Authentication, VideoController.updateVideo);
+VideoRouter.put(
+	"/:id",
+	Authentication,
+	ImageUpload.single("thumbnail"),
+	VideoController.updateVideo
+);
 
 // Delete video
 VideoRouter.delete("/:id", Authentication, VideoController.deleteVideo);

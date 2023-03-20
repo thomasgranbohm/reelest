@@ -8,6 +8,7 @@ import prisma from "database/client.js";
 
 import {
 	MalformedBodyError,
+	MissingFileError,
 	NotFoundError,
 	StillProcessingError,
 	UnauthorizedError,
@@ -16,7 +17,10 @@ import getMediaPath from "lib/getMediaPath.js";
 import getTokenString from "lib/getTokenString.js";
 import PromiseHandler from "lib/PromiseHandler.js";
 
-import { handleVideoUpload } from "services/FileSystem.js";
+import {
+	handleThumbnailUpload,
+	handleVideoUpload,
+} from "services/FileSystem.js";
 import { verifyToken } from "services/JWT.js";
 
 import { VideoCreateBody, VideoUpdateBody } from "types/video.js";
@@ -25,14 +29,13 @@ import { VideoCreateBody, VideoUpdateBody } from "types/video.js";
 const createVideo = PromiseHandler(async (req, res) => {
 	const { error, value } = Joi.object<VideoCreateBody>({
 		description: config.validation.video.description,
-		title: config.validation.video.title,
+		title: config.validation.video.title.required(),
 	}).validate(req.body);
 
 	if (error) {
 		throw MalformedBodyError(error);
 	} else if (!req.file) {
-		// TODO: missing file error
-		throw MalformedBodyError("File is missing");
+		throw MissingFileError();
 	}
 
 	const { description, title } = value;
@@ -55,6 +58,9 @@ const createVideo = PromiseHandler(async (req, res) => {
 const getVideos = PromiseHandler(async (req, res) => {
 	const [videos, count] = await Promise.all([
 		prisma.video.findMany({
+			include: {
+				user: { select: { displayName: true, username: true } },
+			},
 			orderBy: { updatedAt: "desc" },
 			skip: req.pagination.skip,
 			take: req.pagination.take,
@@ -93,7 +99,7 @@ const getVideo = PromiseHandler(async (req, res) => {
 
 	if (
 		video === null ||
-		error ||
+		(token !== null && error) ||
 		(video.status !== "PUBLISHED" && payload.id !== video.user.id)
 	) {
 		throw NotFoundError();
@@ -117,7 +123,7 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 
 	if (
 		video === null ||
-		error ||
+		(token !== null && error) ||
 		(video.status !== VideoStatus.PUBLISHED && payload.id !== video.user.id)
 	) {
 		throw NotFoundError();
@@ -138,28 +144,67 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 	}
 });
 
+const getVideoThumbnail = PromiseHandler(async (req, res) => {
+	const { id, thumbnail } = req.params;
+
+	const video = await prisma.video.findUnique({
+		include: { user: { select: { id: true } } },
+		where: { id },
+	});
+
+	const token = getTokenString(req);
+	const { error, payload } = await verifyToken(token);
+
+	if (
+		video === null ||
+		(token !== null && error) ||
+		(video.status !== VideoStatus.PUBLISHED && payload.id !== video.user.id)
+	) {
+		throw NotFoundError();
+	} else if (
+		video.status === VideoStatus.PROCESSING &&
+		payload.id === video.user.id
+	) {
+		throw StillProcessingError();
+	}
+
+	try {
+		const streamPath = getMediaPath(video, "thumbnails", thumbnail);
+		await fs.stat(streamPath);
+
+		return res.sendFile(streamPath);
+	} catch (error) {
+		throw NotFoundError();
+	}
+});
+
 // Update
 const updateVideo = PromiseHandler(async (req, res) => {
 	const { error, value } = Joi.object<VideoUpdateBody>({
 		description: config.validation.video.description,
+		status: config.validation.video.status,
 		title: config.validation.video.title,
 	}).validate(req.body);
 
-	if (error) {
+	if (error && !req.file) {
 		throw MalformedBodyError(error);
 	}
 
 	const { id } = req.params;
 
 	const existingVideo = await prisma.video.findUnique({
-		select: { userId: true },
+		select: { id: true, status: true, userId: true },
 		where: { id },
 	});
 
-	if (existingVideo !== null) {
+	if (existingVideo === null) {
 		throw NotFoundError();
 	} else if (existingVideo.userId !== req.auth.payload.id) {
 		throw UnauthorizedError();
+	}
+
+	if (req.file) {
+		handleThumbnailUpload(existingVideo, req.file);
 	}
 
 	const video = await prisma.video.update({
@@ -198,6 +243,7 @@ export default {
 	deleteVideo,
 	getVideo,
 	getVideoStream,
+	getVideoThumbnail,
 	getVideos,
 	updateVideo,
 };

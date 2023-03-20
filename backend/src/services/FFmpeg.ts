@@ -1,6 +1,9 @@
 import child_process from "child_process";
 import ffmpegPath from "ffmpeg-static";
 import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
+import fs from "fs/promises";
+import path from "path";
+import sharp from "sharp";
 import util from "util";
 
 import config from "config.js";
@@ -99,6 +102,33 @@ export const generateStreamFiles = async (
 		})
 	);
 	console.timeEnd(timeLogLabel);
+
+	return true;
+};
+
+export const generateAppropriateThumbnails = async (
+	source: string,
+	destination: string
+) => {
+	const applicableQualities = config.ffmpeg.qualities.slice(); // TODO: calculate.
+
+	await Promise.all([
+		sharp(source)
+			.resize(32, 18, { fit: "contain" })
+			.jpeg()
+			.toBuffer((_, buffer) =>
+				fs.writeFile(
+					path.resolve(destination, "thumbnail.b64"),
+					Buffer.from(buffer).toString("base64")
+				)
+			),
+		...applicableQualities.map(({ height, width }) =>
+			sharp(source)
+				.resize(width, height, { fit: "contain" })
+				.webp()
+				.toFile(path.resolve(destination, `thumbnail-${width}.webp`))
+		),
+	]);
 
 	return true;
 };

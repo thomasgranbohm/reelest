@@ -5,7 +5,10 @@ import prisma from "database/client.js";
 
 import getMediaPath from "lib/getMediaPath.js";
 
-import { generateStreamFiles } from "services/FFmpeg.js";
+import {
+	generateAppropriateThumbnails,
+	generateStreamFiles,
+} from "services/FFmpeg.js";
 
 export async function handleVideoUpload(
 	video: Pick<Video, "status" | "id">,
@@ -28,6 +31,25 @@ export async function handleVideoUpload(
 		data: { status: "CREATED" },
 		where: { id: video.id },
 	});
+
+	return true;
+}
+
+export async function handleThumbnailUpload(
+	video: Pick<Video, "status" | "id">,
+	file: Express.Multer.File
+): Promise<boolean> {
+	const destDir = getMediaPath(video, "thumbnails");
+
+	try {
+		await fs.stat(destDir);
+	} catch (error) {
+		await fs.mkdir(destDir);
+	}
+
+	await generateAppropriateThumbnails(file.path, destDir);
+
+	await fs.rm(file.path);
 
 	return true;
 }

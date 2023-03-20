@@ -18,30 +18,37 @@ const config = {
 			{
 				bitrate: 45000,
 				height: 2160,
+				width: 3840,
 			},
 			{
 				bitrate: 16000,
 				height: 1440,
+				width: 2560,
 			},
 			{
 				bitrate: 8000,
 				height: 1080,
+				width: 1920,
 			},
 			{
 				bitrate: 5000,
 				height: 720,
+				width: 1280,
 			},
 			{
 				bitrate: 2500,
 				height: 480,
+				width: 848, // Non 16:9
 			},
 			{
 				bitrate: 1000,
 				height: 360,
+				width: 640,
 			},
 			{
 				bitrate: 500,
 				height: 240,
+				width: 426, // Non 16:9
 			},
 		],
 	},
@@ -50,6 +57,7 @@ const config = {
 	},
 	upload: {
 		dest: process.env.UPLOAD_DIR || "/tmp/uploads",
+		image_mimetypes: ["image/png", "image/jpeg"],
 		video_mimetypes: ["video/mp4"],
 	},
 	validation: {
@@ -77,7 +85,8 @@ const config = {
 		},
 		video: {
 			description: Joi.string(),
-			title: Joi.string().min(2).max(64).required(),
+			status: Joi.alternatives(["CREATED", "PUBLISHED"]),
+			title: Joi.string().min(2).max(64),
 		},
 	},
 };

@@ -17,6 +17,7 @@ const createCustomError =
 		new CustomError(status, message, details);
 
 export const MalformedBodyError = createCustomError(400, "Malformed body");
+export const MissingFileError = createCustomError(400, "No file was provided");
 export const UnauthorizedError = createCustomError(401, "Unauthorized");
 export const InvalidCredentialsError = createCustomError(
 	401,
