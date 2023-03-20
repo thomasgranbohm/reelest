@@ -10,3 +10,9 @@ export interface VideoUpdateBody {
 	status?: VideoStatus;
 	title?: string;
 }
+
+export interface Quality {
+	bitrate: number;
+	height: number;
+	width: number;
+}

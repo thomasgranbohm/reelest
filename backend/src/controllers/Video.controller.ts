@@ -7,6 +7,7 @@ import config from "config.js";
 import prisma from "database/client.js";
 
 import {
+	InternalServerError,
 	MalformedBodyError,
 	MissingFileError,
 	NotFoundError,
@@ -64,10 +65,10 @@ const getVideos = PromiseHandler(async (req, res) => {
 			orderBy: { updatedAt: "desc" },
 			skip: req.pagination.skip,
 			take: req.pagination.take,
-			where: { status: "PUBLISHED" },
+			where: { status: VideoStatus.PUBLISHED },
 		}),
 		prisma.video.count({
-			where: { status: "PUBLISHED" },
+			where: { status: VideoStatus.PUBLISHED },
 		}),
 	]);
 
@@ -87,7 +88,9 @@ const getVideo = PromiseHandler(async (req, res) => {
 	const video = await prisma.video.findUnique({
 		select: {
 			description: true,
+			id: true,
 			status: true,
+			thumbnail: true,
 			title: true,
 			user: { select: { displayName: true, id: true, username: true } },
 		},
@@ -97,17 +100,17 @@ const getVideo = PromiseHandler(async (req, res) => {
 	const token = getTokenString(req);
 	const { error, payload } = await verifyToken(token);
 
-	if (
+	if (token !== null && error) {
+		throw InternalServerError("Something went wrong decoding the token");
+	} else if (
 		video === null ||
-		(token !== null && error) ||
-		(video.status !== "PUBLISHED" && payload.id !== video.user.id)
+		(video.status !== VideoStatus.PUBLISHED &&
+			(token === null || video.user.id !== payload.id))
 	) {
 		throw NotFoundError();
 	}
 
-	const { status, title, user } = video;
-
-	return res.send({ data: { video: { id, status, title, user } } });
+	return res.send({ data: { video } });
 });
 
 const getVideoStream = PromiseHandler(async (req, res) => {
@@ -121,16 +124,15 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 	const token = getTokenString(req);
 	const { error, payload } = await verifyToken(token);
 
-	if (
+	if (token !== null && error) {
+		throw InternalServerError("Something went wrong decoding the token");
+	} else if (
 		video === null ||
-		(token !== null && error) ||
-		(video.status !== VideoStatus.PUBLISHED && payload.id !== video.user.id)
+		(video.status !== VideoStatus.PUBLISHED &&
+			(token === null || video.user.id !== payload.id))
 	) {
 		throw NotFoundError();
-	} else if (
-		video.status === VideoStatus.PROCESSING &&
-		payload.id === video.user.id
-	) {
+	} else if (video.status === VideoStatus.PROCESSING) {
 		throw StillProcessingError();
 	}
 
@@ -155,16 +157,15 @@ const getVideoThumbnail = PromiseHandler(async (req, res) => {
 	const token = getTokenString(req);
 	const { error, payload } = await verifyToken(token);
 
-	if (
+	if (token !== null && error) {
+		throw InternalServerError("Something went wrong decoding the token");
+	} else if (
 		video === null ||
-		(token !== null && error) ||
-		(video.status !== VideoStatus.PUBLISHED && payload.id !== video.user.id)
+		(video.status !== VideoStatus.PUBLISHED &&
+			(token === null || video.user.id !== payload.id))
 	) {
 		throw NotFoundError();
-	} else if (
-		video.status === VideoStatus.PROCESSING &&
-		payload.id === video.user.id
-	) {
+	} else if (video.status === VideoStatus.PROCESSING) {
 		throw StillProcessingError();
 	}
 
@@ -186,7 +187,7 @@ const updateVideo = PromiseHandler(async (req, res) => {
 		title: config.validation.video.title,
 	}).validate(req.body);
 
-	if (error && !req.file) {
+	if (error) {
 		throw MalformedBodyError(error);
 	}
 

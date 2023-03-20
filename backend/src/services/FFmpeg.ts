@@ -1,19 +1,15 @@
 import child_process from "child_process";
 import ffmpegPath from "ffmpeg-static";
 import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
-import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import util from "util";
 
 import config from "config.js";
 
-ffmpeg.setFfmpegPath(ffmpegPath);
+import { Quality } from "types/video";
 
-type Quality = {
-	bitrate: number;
-	height: number;
-};
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 export const generateStreamFiles = async (
 	source: string,
@@ -62,7 +58,7 @@ export const generateStreamFiles = async (
 			({ bitrate }, i) =>
 				`-map [v${
 					i + 1
-				}out] -c:v:${i} libx264 -x264-params "nal-hrd=cbr:force-cfr=1" -b:v:0 ${bitrate}K -maxrate:v:0 ${bitrate}K -minrate:v:0 ${bitrate}K -bufsize:v:0 ${bitrate}K -preset slow -g 48 -sc_threshold 0 -keyint_min 48`
+				}out] -c:v:${i} libx264 -x264-params "nal-hrd=cbr:force-cfr=1" -b:v:${i} ${bitrate}K -maxrate:v:${i} ${bitrate}K -minrate:v:${i} ${bitrate}K -bufsize:v:${i} ${bitrate}K -preset slow -g 48 -sc_threshold 0 -keyint_min 48`
 		)
 		.join(" ");
 
@@ -112,16 +108,8 @@ export const generateAppropriateThumbnails = async (
 ) => {
 	const applicableQualities = config.ffmpeg.qualities.slice(); // TODO: calculate.
 
-	await Promise.all([
-		sharp(source)
-			.resize(32, 18, { fit: "contain" })
-			.jpeg()
-			.toBuffer((_, buffer) =>
-				fs.writeFile(
-					path.resolve(destination, "thumbnail.b64"),
-					Buffer.from(buffer).toString("base64")
-				)
-			),
+	const [base64] = await Promise.all([
+		sharp(source).resize(32, 18, { fit: "contain" }).jpeg().toBuffer(),
 		...applicableQualities.map(({ height, width }) =>
 			sharp(source)
 				.resize(width, height, { fit: "contain" })
@@ -130,5 +118,5 @@ export const generateAppropriateThumbnails = async (
 		),
 	]);
 
-	return true;
+	return base64;
 };

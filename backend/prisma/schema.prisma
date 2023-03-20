@@ -28,6 +28,7 @@ model Video {
     description String?
     status      VideoStatus @default(PROCESSING)
     title       String
+    thumbnail   String?
     updatedAt   DateTime    @default(now())
     userId      String      @db.ObjectId
     user        User        @relation(fields: [userId], references: [id])

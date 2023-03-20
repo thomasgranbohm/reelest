@@ -47,9 +47,14 @@ export async function handleThumbnailUpload(
 		await fs.mkdir(destDir);
 	}
 
-	await generateAppropriateThumbnails(file.path, destDir);
+	const base64 = await generateAppropriateThumbnails(file.path, destDir);
 
 	await fs.rm(file.path);
+
+	await prisma.video.update({
+		data: { thumbnail: Buffer.from(base64.buffer).toString("base64") },
+		where: { id: video.id },
+	});
 
 	return true;
 }
