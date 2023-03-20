@@ -16,29 +16,29 @@ const config = {
 	ffmpeg: {
 		qualities: [
 			{
-				bitrate: 45000,
+				bitrate: 34000,
 				height: 2160,
 				width: 3840,
 			},
 			{
-				bitrate: 16000,
+				bitrate: 13000,
 				height: 1440,
 				width: 2560,
 			},
 			{
-				bitrate: 8000,
+				bitrate: 6000,
 				height: 1080,
 				width: 1920,
 			},
 			{
-				bitrate: 5000,
+				bitrate: 4000,
 				height: 720,
 				width: 1280,
 			},
 			{
-				bitrate: 2500,
+				bitrate: 2000,
 				height: 480,
-				width: 848, // Non 16:9
+				width: 854, // Non 16:9
 			},
 			{
 				bitrate: 1000,
@@ -46,7 +46,7 @@ const config = {
 				width: 640,
 			},
 			{
-				bitrate: 500,
+				bitrate: 700,
 				height: 240,
 				width: 426, // Non 16:9
 			},
