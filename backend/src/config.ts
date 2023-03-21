@@ -1,3 +1,4 @@
+import { ImageType } from "@prisma/client";
 import Joi from "joi";
 
 const config = {
@@ -50,6 +51,38 @@ const config = {
 				bitrate: 700,
 				height: 240,
 				width: 426, // Non 16:9
+			},
+		],
+		thumbnails: [
+			{
+				height: 720,
+				type: ImageType.WEBP,
+				width: 1280,
+			},
+			{
+				height: 480,
+				type: ImageType.WEBP,
+				width: 640,
+			},
+			{
+				height: 360,
+				type: ImageType.WEBP,
+				width: 480,
+			},
+			{
+				height: 180,
+				type: ImageType.WEBP,
+				width: 320,
+			},
+			{
+				height: 90,
+				type: ImageType.WEBP,
+				width: 120,
+			},
+			{
+				height: 24,
+				type: ImageType.BASE64,
+				width: 32,
 			},
 		],
 	},

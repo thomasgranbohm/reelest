@@ -142,18 +142,23 @@ export const generateAppropriateThumbnails = async (
 	source: string,
 	destination: string
 ) => {
-	const applicableQualities = config.ffmpeg.qualities.slice();
+	const applicableThumbnails = config.ffmpeg.thumbnails.slice();
 
-	const thumbnails = await Promise.all([
-		generateBase64Thumbnail(source, { height: 18, width: 32 }),
-		...applicableQualities.map(({ height, width }) =>
-			generateWebPThumbnail(
-				source,
-				{ height, width },
-				path.resolve(destination, `thumbnail-${width}p.webp`)
-			)
-		),
-	]);
+	const thumbnails = await Promise.all(
+		applicableThumbnails.map(({ type, ...thumbnail }) =>
+			type === ImageType.WEBP
+				? generateWebPThumbnail(
+						source,
+						thumbnail,
+						path.resolve(
+							destination,
+							`thumbnail-${thumbnail.width}p.webp`
+						)
+						// eslint-disable-next-line no-mixed-spaces-and-tabs
+				  )
+				: generateBase64Thumbnail(source, thumbnail)
+		)
+	);
 
 	return thumbnails;
 };
