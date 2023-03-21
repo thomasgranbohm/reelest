@@ -24,7 +24,7 @@ const VideoPreview: FC<VideoPreviewProps> = ({
 			>
 				{thumbnails && base64 ? (
 					<Image
-						src={getVideoThumbnail({ id, thumbnails }, 3840)}
+						src={getVideoThumbnail({ id, thumbnails }, 1280)}
 						alt={`Thumbnail for ${title}`}
 						className="aspect-video w-full rounded-md object-contain transition-shadow group-hover:shadow-xl"
 						width={1920}

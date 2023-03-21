@@ -6,6 +6,7 @@ import DateDisplay from "components/DateDisplay";
 import { Column, Row } from "components/Grid";
 import Heading from "components/Heading";
 import Layout from "components/Layout";
+import Separator from "components/Separator";
 import VideoPlayer from "components/VideoPlayer";
 import { IVideo } from "types/video";
 
@@ -17,18 +18,24 @@ const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
 			<Row>
 				<Column xl={9}>
 					<VideoPlayer video={video} />
-					<div className="mt-4 flex items-center justify-between">
-						<Heading type="h2">{title}</Heading>
-						<DateDisplay date={video.createdAt} relative />
-					</div>
-					<div className="mt-4 flex flex-col items-start justify-start">
-						<Link
-							className="inline-block hover:underline"
-							href={`/user/${user.username}`}
-						>
-							<b>{user.displayName}</b>
-						</Link>
-						<p>{user._count.followedBy} followers</p>
+					<Heading type="h2" look="h4" className="mt-4">
+						{title}
+					</Heading>
+					<div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+						<div className="flex flex-col items-start justify-start">
+							<Link
+								className="inline-block hover:underline"
+								href={`/user/${user.username}`}
+							>
+								<b>{user.displayName}</b>
+							</Link>
+							<p>{user._count.followedBy} followers</p>
+						</div>
+						<div className="flex items-center">
+							<p>10 views</p>
+							<Separator variant="dot" />
+							<DateDisplay date={video.createdAt} relative />
+						</div>
 					</div>
 					<div className="mt-4">
 						<p>{description}</p>

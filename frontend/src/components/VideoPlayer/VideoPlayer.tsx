@@ -188,7 +188,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 				ref={videoRef}
 				className="absolute top-0 bottom-0 z-0 h-full w-full "
 				src={`/api/videos/${id}/stream/master.m3u8`}
-				poster={getVideoThumbnail(video, 1920)}
+				poster={getVideoThumbnail(video, 1280)}
 				onManifestLoad={(manifest) => setLevels(manifest.levels)}
 				onHlsLoad={setHls}
 				playsInline
