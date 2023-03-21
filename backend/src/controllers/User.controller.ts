@@ -9,7 +9,9 @@ import prisma from "database/client.js";
 
 import checkUserAuthentification from "lib/checkUserAuthentification.js";
 import {
+	CannotSubscribeToSelf,
 	CustomError,
+	InternalServerError,
 	InvalidCredentialsError,
 	MalformedBodyError,
 	NotFoundError,
@@ -74,8 +76,17 @@ const createUserFollower = PromiseHandler(
 	async (req: Request, res: Response) => {
 		const { username } = req.params;
 
+		const authUser = await prisma.user.findUnique({
+			select: { username: true },
+			where: { id: req.auth.payload.id },
+		});
+
+		if (authUser.username === username) {
+			throw CannotSubscribeToSelf();
+		}
+
 		const user = await prisma.user.update({
-			data: { followedByIDs: { push: [req.auth.payload.id] } },
+			data: { followedBy: { connect: { id: req.auth.payload.id } } },
 			select: {
 				_count: {
 					select: {
@@ -149,7 +160,7 @@ const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 
 	return res.send({
 		data: user.followedBy,
-		skip: req.pagination.skip + req.pagination.take,
+		skip: req.pagination.skip,
 		take: req.pagination.take,
 		total: user._count.followedBy,
 	});
@@ -181,7 +192,7 @@ const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 
 	return res.send({
 		data: user.following,
-		skip: req.pagination.skip + req.pagination.take,
+		skip: req.pagination.skip,
 		take: req.pagination.take,
 		total: user._count.following,
 	});
@@ -258,6 +269,23 @@ const deleteUser = PromiseHandler(async (req: Request, res: Response) => {
 	}
 });
 
+const deleteUserFollower = PromiseHandler(async (req, res) => {
+	const { username } = req.params;
+	try {
+		await prisma.user.update({
+			data: { followedBy: { disconnect: { id: req.auth.payload.id } } },
+			where: { username },
+		});
+
+		return res
+			.status(200)
+			.send({ data: { message: "Subscription deleted" } });
+	} catch (error) {
+		console.error(error);
+		throw InternalServerError("Could not remove follower");
+	}
+});
+
 // Custom
 const authenticateUser = PromiseHandler(async (req: Request, res: Response) => {
 	const { error, value } = Joi.object<LoginValidationSchema>({
@@ -301,6 +329,7 @@ export default {
 	createUser,
 	createUserFollower,
 	deleteUser,
+	deleteUserFollower,
 	getUser,
 	getUserFollowers,
 	getUserFollowing,

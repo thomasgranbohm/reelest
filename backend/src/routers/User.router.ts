@@ -76,4 +76,10 @@ UserRouter.post(
 	UserController.createUserFollower
 );
 
+UserRouter.delete(
+	"/:username/follow",
+	Authentication,
+	UserController.deleteUserFollower
+);
+
 export default UserRouter;

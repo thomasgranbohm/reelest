@@ -16,6 +16,10 @@ const createCustomError =
 	(status: number, message: string) => (details?: object | string) =>
 		new CustomError(status, message, details);
 
+export const CannotSubscribeToSelf = createCustomError(
+	400,
+	"Cannot subscribe to own account"
+);
 export const MalformedBodyError = createCustomError(400, "Malformed body");
 export const MissingFileError = createCustomError(400, "No file was provided");
 export const UnauthorizedError = createCustomError(401, "Unauthorized");
