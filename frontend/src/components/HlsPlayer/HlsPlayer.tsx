@@ -70,8 +70,6 @@ const HlsPlayer = forwardRef<HTMLVideoElement, HlsPlayerProps>(
 			return <video ref={ref} {...props} />;
 		}
 
-		console.log("Regular ass video player");
-
 		return <video ref={ref} src={src} autoPlay={autoPlay} {...props} />;
 	}
 );

@@ -48,6 +48,12 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 		}
 	}, [hls, level]);
 
+	const cancelTimer = () => {
+		if (timer !== null) {
+			clearTimeout(timer);
+		}
+	};
+
 	const toggleFullscreenState = useCallback(() => {
 		if (containerRef.current) {
 			if (document.fullscreenElement === null) {
@@ -104,9 +110,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 			setShowControls(true);
 		}
 
-		if (timer !== null) {
-			clearTimeout(timer);
-		}
+		cancelTimer();
 
 		if (
 			playState !== VideoState.NOT_STARTED &&
@@ -120,7 +124,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 				}, 1e3)
 			);
 		}
-	}, [playState, timer, showControls, showSettings]);
+	}, [playState, timer, showControls, showSettings, cancelTimer]);
 
 	const onPlay = () => {
 		if (videoRef.current) {
@@ -131,9 +135,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 			if (videoRef.current.paused) {
 				setShowControls(true);
 			} else {
-				if (timer !== null) {
-					clearTimeout(timer);
-				}
+				cancelTimer();
 
 				setTimer(
 					setTimeout(() => {
@@ -181,7 +183,6 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 		<div
 			ref={containerRef}
 			className="group relative aspect-video w-full overflow-hidden"
-			onMouseMove={restartTimer}
 		>
 			<HlsPlayer
 				ref={videoRef}
@@ -198,21 +199,41 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 				onVolumeChange={onVolumeChange}
 				onTimeUpdate={onTimeUpdate}
 				onEnded={onEnded}
+				onMouseMove={restartTimer}
 			/>
 			<div
 				className={clsx(
-					"absolute -bottom-28 z-10 h-28 w-full bg-opacity-50 bg-gradient-to-t from-black to-transparent pt-6 text-white transition-all",
-					showControls && "!-bottom-5"
+					"absolute -bottom-28 z-10 flex h-28 w-full flex-col items-stretch justify-end bg-opacity-50 bg-gradient-to-t from-black to-transparent text-white transition-all",
+					showControls && "!-bottom-0"
 				)}
+				onMouseLeave={restartTimer}
+				onMouseEnter={cancelTimer}
 			>
 				{videoRef.current && (
-					<ProgressBar
-						className="h-1 w-full px-4"
-						minValue={0}
-						maxValue={videoRef.current.duration}
-						value={currentTime}
-						label="Progress"
-					/>
+					<div
+						className="group/progress mx-4 cursor-pointer py-2"
+						onClick={(e) =>
+							videoRef.current
+								? (videoRef.current.currentTime =
+										(e.nativeEvent.offsetX /
+											e.currentTarget.clientWidth) *
+										videoRef.current.duration)
+								: null
+						}
+					>
+						<ProgressBar
+							className="h-1 w-full transition-all group-hover/progress:h-2"
+							minValue={0}
+							maxValue={videoRef.current.duration}
+							value={currentTime}
+							underlayValue={
+								videoRef.current?.buffered.length > 0
+									? videoRef.current?.buffered.end(0)
+									: undefined
+							}
+							label="Progress"
+						/>
+					</div>
 				)}
 				<div className="flex h-16 w-full items-center justify-between">
 					<div className="flex h-full items-center">
