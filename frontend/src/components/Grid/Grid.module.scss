@@ -3,10 +3,6 @@
 .row {
 	@include mixins.keep-within-width;
 
-	& + & {
-		@apply mt-4;
-	}
-
 	& > .column > .row {
 		width: calc(100% + theme("spacing.4"));
 		@apply -mx-4 mt-4;

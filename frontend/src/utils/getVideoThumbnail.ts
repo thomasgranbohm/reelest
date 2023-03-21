@@ -7,7 +7,7 @@ export default function getVideoThumbnail(
 	const thumbnail = thumbnails.find((t) => t.width === size);
 
 	if (!thumbnail) {
-		throw new Error("No thumbnail found");
+		return null;
 	}
 
 	return `/api${thumbnail.url}`;

@@ -102,7 +102,7 @@ export const Row: FC<RowProps> = ({ children, className }) => {
 		<div
 			className={clsx(
 				classes["row"],
-				"mx-auto flex h-min flex-wrap pr-4",
+				"mx-auto mt-4 flex h-min flex-wrap pr-4",
 				className
 			)}
 		>

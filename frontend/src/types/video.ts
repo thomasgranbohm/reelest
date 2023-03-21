@@ -1,4 +1,5 @@
 export interface IVideo {
+	createdAt: string;
 	description?: string;
 	id: string;
 	thumbnails: {
@@ -9,6 +10,9 @@ export interface IVideo {
 	}[];
 	title: string;
 	user: {
+		_count: {
+			followedBy: number;
+		};
 		displayName: string;
 		username: string;
 	};

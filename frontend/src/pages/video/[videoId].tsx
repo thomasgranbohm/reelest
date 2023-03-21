@@ -2,6 +2,7 @@ import { privateAPI } from "api";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import Link from "next/link";
 
+import DateDisplay from "components/DateDisplay";
 import { Column, Row } from "components/Grid";
 import Heading from "components/Heading";
 import Layout from "components/Layout";
@@ -16,16 +17,22 @@ const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
 			<Row>
 				<Column xl={9}>
 					<VideoPlayer video={video} />
-					<Heading type="h2" className="mt-4">
-						{title}
-					</Heading>
-					<Link
-						className="mt-4 block hover:underline"
-						href={`/user/${user.username}`}
-					>
-						<b>{user.displayName}</b>
-					</Link>
-					<p className="mt-4">{description}</p>
+					<div className="mt-4 flex items-center justify-between">
+						<Heading type="h2">{title}</Heading>
+						<DateDisplay date={video.createdAt} relative />
+					</div>
+					<div className="mt-4 flex flex-col items-start justify-start">
+						<Link
+							className="inline-block hover:underline"
+							href={`/user/${user.username}`}
+						>
+							<b>{user.displayName}</b>
+						</Link>
+						<p>{user._count.followedBy} followers</p>
+					</div>
+					<div className="mt-4">
+						<p>{description}</p>
+					</div>
 				</Column>
 			</Row>
 		</Layout>

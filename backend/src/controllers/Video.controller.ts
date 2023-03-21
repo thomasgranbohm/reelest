@@ -96,6 +96,7 @@ const getVideo = PromiseHandler(async (req, res) => {
 
 	const video = await prisma.video.findUnique({
 		select: {
+			createdAt: true,
 			description: true,
 			id: true,
 			status: true,

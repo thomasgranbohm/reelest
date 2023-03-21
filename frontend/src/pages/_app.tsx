@@ -1,4 +1,4 @@
-import { SSRProvider } from "react-aria";
+import { I18nProvider, SSRProvider } from "react-aria";
 import type { AppProps } from "next/app";
 import { Ubuntu } from "next/font/google";
 
@@ -14,14 +14,16 @@ const ubuntuFont = Ubuntu({
 function CustomApp({ Component, pageProps }: AppProps) {
 	return (
 		<SSRProvider>
-			<div className={ubuntuFont.className}>
-				<Component {...pageProps} />
-			</div>
-			{process.env.NODE_ENV !== "production" && (
-				<pre>
-					<code>{JSON.stringify(pageProps, null, 4)}</code>
-				</pre>
-			)}
+			<I18nProvider locale="en-FR">
+				<div className={ubuntuFont.className}>
+					<Component {...pageProps} />
+				</div>
+				{process.env.NODE_ENV !== "production" && (
+					<pre>
+						<code>{JSON.stringify(pageProps, null, 4)}</code>
+					</pre>
+				)}
+			</I18nProvider>
 		</SSRProvider>
 	);
 }
