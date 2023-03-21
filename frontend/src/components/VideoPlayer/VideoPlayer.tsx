@@ -1,6 +1,6 @@
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useProgressBar } from "react-aria";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
+import Hls, { Level } from "hls.js";
 
 import Button from "components/Button";
 import HlsPlayer from "components/HlsPlayer";
@@ -31,10 +31,22 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 	const [playState, setPlayState] = useState<VideoState>(
 		VideoState.NOT_STARTED
 	);
-	const [show, setShow] = useState<boolean>(true);
+	const [showControls, setShowControls] = useState<boolean>(true);
+	const [showSettings, setShowSettings] = useState<boolean>(false);
 	const [currentTime, setCurrentTime] = useState<number>(0);
 
 	const [timer, setTimer] = useState<NodeJS.Timer | null>(null);
+
+	const [levels, setLevels] = useState<Level[]>([]);
+	const [level, setLevel] = useState<number>(-1);
+	const [hls, setHls] = useState<Hls>();
+
+	useEffect(() => {
+		if (hls) {
+			hls.currentLevel = level;
+			setShowSettings(false);
+		}
+	}, [hls, level]);
 
 	const toggleFullscreenState = useCallback(() => {
 		if (containerRef.current) {
@@ -87,25 +99,50 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 		setFullscreen(document.fullscreenElement !== null);
 	};
 
-	const onMouseMove = useCallback(() => {
-		if (!show) {
-			setShow(true);
+	const restartTimer = useCallback(() => {
+		if (!showControls) {
+			setShowControls(true);
 		}
 
 		if (timer !== null) {
 			clearTimeout(timer);
 		}
 
-		if (playState !== VideoState.NOT_STARTED) {
-			setTimer(setTimeout(() => setShow(false), 1e3));
+		if (
+			playState !== VideoState.NOT_STARTED &&
+			playState !== VideoState.PAUSED
+		) {
+			setTimer(
+				setTimeout(() => {
+					if (!showSettings) {
+						setShowControls(false);
+					}
+				}, 1e3)
+			);
 		}
-	}, [show, timer, playState]);
+	}, [playState, timer, showControls, showSettings]);
 
 	const onPlay = () => {
 		if (videoRef.current) {
 			setPlayState(
 				videoRef.current.paused ? VideoState.PAUSED : VideoState.PLAYING
 			);
+
+			if (videoRef.current.paused) {
+				setShowControls(true);
+			} else {
+				if (timer !== null) {
+					clearTimeout(timer);
+				}
+
+				setTimer(
+					setTimeout(() => {
+						if (!showSettings) {
+							setShowControls(false);
+						}
+					}, 1e3)
+				);
+			}
 		}
 	};
 
@@ -144,14 +181,15 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 		<div
 			ref={containerRef}
 			className="group relative aspect-video w-full overflow-hidden"
-			onMouseMove={onMouseMove}
+			onMouseMove={restartTimer}
 		>
 			<HlsPlayer
 				ref={videoRef}
 				className="absolute top-0 bottom-0 z-0 h-full w-full "
 				src={`/api/videos/${id}/stream/master.m3u8`}
 				poster={getVideoThumbnail(video, 1920)}
-				onManifestLoad={console.log}
+				onManifestLoad={(manifest) => setLevels(manifest.levels)}
+				onHlsLoad={setHls}
 				playsInline
 				onClick={togglePlayState}
 				onDoubleClick={toggleFullscreenState}
@@ -163,15 +201,24 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 			/>
 			<div
 				className={clsx(
-					"absolute -bottom-28 z-10 h-28 w-full bg-opacity-50 bg-gradient-to-t from-black to-transparent  pt-4 text-white transition-all",
-					show && "!-bottom-4"
+					"absolute -bottom-28 z-10 h-28 w-full bg-opacity-50 bg-gradient-to-t from-black to-transparent pt-6 text-white transition-all",
+					showControls && "!-bottom-5"
 				)}
 			>
+				{videoRef.current && (
+					<ProgressBar
+						className="h-1 w-full px-4"
+						minValue={0}
+						maxValue={videoRef.current.duration}
+						value={currentTime}
+						label="Progress"
+					/>
+				)}
 				<div className="flex h-16 w-full items-center justify-between">
-					<div className="p flex h-full items-center">
+					<div className="flex h-full items-center">
 						<Button
 							onPress={togglePlayState}
-							className="aspect-square h-full p-3"
+							className="h-full p-3 pl-6"
 							title={
 								playState === VideoState.ENDED
 									? "Replay"
@@ -181,6 +228,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 							}
 						>
 							<Icon
+								className="aspect-square h-full"
 								variant={
 									playState === VideoState.ENDED
 										? "replay"
@@ -192,9 +240,10 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 						</Button>
 						<Button
 							onPress={toggleMuteState}
-							className="aspect-square h-full p-3"
+							className="h-full p-3"
 						>
 							<Icon
+								className="aspect-square h-full"
 								variant={mute ? "volume_mute" : "volume_up"}
 							/>
 						</Button>
@@ -210,15 +259,59 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 							)}
 					</div>
 					<div className="flex h-full items-center">
-						<Icon
-							className="aspect-square h-full p-4"
-							variant="settings"
-						/>
+						<div className="group/settings relative h-full p-3">
+							<Button
+								onPress={() => setShowSettings(!showSettings)}
+								className="h-full"
+							>
+								<Icon
+									className={clsx(
+										"aspect-square h-full transition-transform",
+										showSettings
+											? "rotate-[30deg]"
+											: "rotate-0"
+									)}
+									variant="settings"
+								/>
+							</Button>
+							{levels && (
+								<ul
+									className={clsx(
+										"absolute bottom-[125%] left-[50%] hidden min-w-full translate-x-[-50%] rounded-md bg-black bg-opacity-60",
+										showSettings && "!block"
+									)}
+								>
+									{levels.map((_level, i) => (
+										<li key={i}>
+											<Button
+												className={clsx(
+													"w-full px-4 py-2 text-center",
+													level === i &&
+														"bg-white text-black"
+												)}
+												onPress={() => setLevel(i)}
+											>
+												{_level.height + "p"}
+											</Button>
+										</li>
+									))}
+									<li>
+										<Button
+											className="w-full px-4 py-2 text-center"
+											onPress={() => setLevel(-1)}
+										>
+											Auto
+										</Button>
+									</li>
+								</ul>
+							)}
+						</div>
 						<Button
-							className="aspect-square h-full p-3"
+							className="h-full p-3 pr-7"
 							onPress={toggleFullscreenState}
 						>
 							<Icon
+								className="aspect-square h-full"
 								variant={
 									fullscreen
 										? "fullscreen_exit"
@@ -228,15 +321,6 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 						</Button>
 					</div>
 				</div>
-				{videoRef.current && (
-					<ProgressBar
-						className="h-1 w-full px-4"
-						minValue={0}
-						maxValue={videoRef.current.duration}
-						value={currentTime}
-						label="Progress"
-					/>
-				)}
 			</div>
 		</div>
 	);

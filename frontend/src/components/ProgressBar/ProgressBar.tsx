@@ -28,7 +28,7 @@ const ProgressBar: FC<ProgressBarProps> = ({ className, ...props }) => {
 					<span>{progressBarProps["aria-valuetext"]}</span>
 				)}
 			</VisuallyHidden>
-			<div className="relative h-full w-full rounded-md bg-gray-500">
+			<div className="relative h-full w-full rounded-md bg-black bg-opacity-20">
 				<div
 					className="absolute h-full rounded-md bg-white"
 					style={{ width: barWidth }}

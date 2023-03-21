@@ -3,93 +3,74 @@ import Hls, { HlsConfig, ManifestParsedData } from "hls.js";
 
 export interface HlsPlayerProps extends VideoHTMLAttributes<HTMLVideoElement> {
 	hlsConfig?: Partial<HlsConfig>;
+	onHlsLoad?: (hls: Hls) => void;
 	onManifestLoad?: (manifest: ManifestParsedData) => void;
 	src: string;
 }
 
 const HlsPlayer = forwardRef<HTMLVideoElement, HlsPlayerProps>(
-	({ autoPlay, hlsConfig, onManifestLoad, src, ...props }, ref) => {
+	(
+		{ autoPlay, hlsConfig, onHlsLoad, onManifestLoad, src, ...props },
+		ref
+	) => {
 		const [hls, setHls] = useState<Hls>();
 
 		useEffect(() => {
-			function initPlayer() {
-				if (hls !== null && hls !== undefined) {
-					hls.destroy();
+			if (!Hls.isSupported()) {
+				return;
+			}
+
+			if (hls) {
+				return;
+			}
+
+			const newHandler = new Hls({
+				enableWorker: true,
+				...hlsConfig,
+			});
+
+			newHandler.on(Hls.Events.MEDIA_ATTACHED, () => {
+				newHandler.loadSource(src);
+
+				if (onHlsLoad) {
+					onHlsLoad(newHandler);
 				}
+			});
 
-				const newHls = new Hls({
-					enableWorker: false,
-					...hlsConfig,
-				});
+			newHandler.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+				if (onManifestLoad) {
+					onManifestLoad(data);
+				}
+			});
 
-				newHls.on(Hls.Events.MEDIA_ATTACHED, () => {
-					newHls.loadSource(src);
-
-					newHls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-						if (onManifestLoad) {
-							onManifestLoad(data);
-						}
-
-						if (autoPlay) {
-							if (
-								ref !== null &&
-								"current" in ref &&
-								ref.current !== null
-							) {
-								ref.current
-									?.play()
-									.catch(() =>
-										console.log("Could not autoplay")
-									);
-							}
-						}
-					});
-				});
-
-				newHls.on(Hls.Events.ERROR, function (_, data) {
-					if (data.fatal) {
-						switch (data.type) {
-							case Hls.ErrorTypes.NETWORK_ERROR:
-								newHls.startLoad();
-								break;
-							case Hls.ErrorTypes.MEDIA_ERROR:
-								newHls.recoverMediaError();
-								break;
-							default:
-								initPlayer();
-								break;
-						}
+			newHandler.on(Hls.Events.ERROR, (_, data) => {
+				if (data.fatal) {
+					switch (data.type) {
+						case Hls.ErrorTypes.NETWORK_ERROR:
+							newHandler.startLoad();
+							break;
+						case Hls.ErrorTypes.MEDIA_ERROR:
+							newHandler.recoverMediaError();
+							break;
+						default:
+							console.error(data);
+							break;
 					}
-				});
-
-				setHls(newHls);
-			}
-
-			if (Hls.isSupported()) {
-				initPlayer();
-			}
-
-			return () => {
-				if (hls !== null && hls !== undefined) {
-					hls.destroy();
 				}
-			};
-		}, [src, autoPlay, hlsConfig]);
+			});
 
-		useEffect(() => {
-			if (
-				hls &&
-				ref !== null &&
-				"current" in ref &&
-				ref.current !== null
-			) {
-				hls.attachMedia(ref.current);
+			if (ref !== null && "current" in ref && ref.current !== null) {
+				newHandler.attachMedia(ref.current);
 			}
-		}, [hls, ref]);
+
+			setHls(newHandler);
+		}, [src, hlsConfig, hls, ref, onHlsLoad]);
 
 		if (typeof window !== "undefined" && Hls.isSupported()) {
 			return <video ref={ref} {...props} />;
 		}
+
+		console.log("Regular ass video player");
 
 		return <video ref={ref} src={src} autoPlay={autoPlay} {...props} />;
 	}
