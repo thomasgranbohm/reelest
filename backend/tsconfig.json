@@ -1,9 +1,6 @@
 {
+	"extends": "@tsconfig/node16/tsconfig.json",
 	"compilerOptions": {
-		"target": "esnext",
-		"module": "esnext",
-		"moduleResolution": "node",
-		"lib": ["esnext"],
 		"noImplicitAny": true,
 		"noUnusedParameters": true,
 		"outDir": "./dist",
@@ -14,28 +11,9 @@
 		"strictFunctionTypes": false,
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": "src/",
 		"strict": true,
 		"isolatedModules": true,
-		"esModuleInterop": true,
-		"removeComments": true,
-		"paths": {
-			"controllers/*": ["./controllers/*"],
-			"config.js": ["./config.ts"],
-			"database/*": ["./database/*"],
-			"lib/*": ["./lib/*"],
-			"middlewares/*": ["./middlewares/*"],
-			"routers/*": ["./routers/*"],
-			"services/*": ["./services/*"],
-			"types/*": ["./types/*"]
-		},
-		"plugins": [
-			{ "transform": "typescript-transform-paths" },
-			{
-				"transform": "typescript-transform-paths",
-				"afterDeclarations": true
-			}
-		]
+		"esModuleInterop": true
 	},
 	"include": ["src/**/*.ts"],
 	"exclude": ["node_modules"],

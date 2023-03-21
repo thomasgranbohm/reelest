@@ -1,10 +1,9 @@
 import { RequestHandler } from "express";
 
-import { ForbiddenError, UnauthorizedError } from "lib/errors.js";
-import getTokenString from "lib/getTokenString.js";
-import PromiseHandler from "lib/PromiseHandler.js";
-
-import { verifyToken } from "services/JWT.js";
+import { ForbiddenError, UnauthorizedError } from "../lib/errors";
+import getTokenString from "../lib/getTokenString";
+import PromiseHandler from "../lib/PromiseHandler";
+import { verifyToken } from "../services/JWT";
 
 const Authentication: RequestHandler = PromiseHandler(async (req, _, next) => {
 	const token = getTokenString(req);

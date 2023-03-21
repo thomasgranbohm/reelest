@@ -1,10 +1,9 @@
 import { Router } from "express";
 
-import VideoController from "controllers/Video.controller.js";
-
-import Authentication from "middlewares/Authentication.js";
-import Pagination from "middlewares/Pagination.js";
-import { ImageUpload, VideoUpload } from "middlewares/Upload.js";
+import VideoController from "../controllers/Video.controller";
+import Authentication from "../middlewares/Authentication";
+import Pagination from "../middlewares/Pagination";
+import { ImageUpload, VideoUpload } from "../middlewares/Upload";
 
 const VideoRouter = Router();
 

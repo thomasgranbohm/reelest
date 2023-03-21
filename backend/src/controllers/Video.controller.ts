@@ -2,10 +2,8 @@ import { VideoStatus } from "@prisma/client";
 import fs from "fs/promises";
 import Joi from "joi";
 
-import config from "config.js";
-
-import prisma from "database/client.js";
-
+import config from "../config";
+import prisma from "../database/client";
 import {
 	InternalServerError,
 	MalformedBodyError,
@@ -13,18 +11,16 @@ import {
 	NotFoundError,
 	StillProcessingError,
 	UnauthorizedError,
-} from "lib/errors.js";
-import getTokenString from "lib/getTokenString.js";
-import { getThumbnailPath, getVideoMediaPath } from "lib/paths.js";
-import PromiseHandler from "lib/PromiseHandler.js";
-
+} from "../lib/errors";
+import getTokenString from "../lib/getTokenString";
+import { getThumbnailPath, getVideoMediaPath } from "../lib/paths";
+import PromiseHandler from "../lib/PromiseHandler";
 import {
 	handleThumbnailUpload,
 	handleVideoUpload,
-} from "services/FileSystem.js";
-import { verifyToken } from "services/JWT.js";
-
-import { VideoCreateBody, VideoUpdateBody } from "types/video.js";
+} from "../services/FileSystem";
+import { verifyToken } from "../services/JWT";
+import { VideoCreateBody, VideoUpdateBody } from "../types/video";
 
 // Create
 const createVideo = PromiseHandler(async (req, res) => {

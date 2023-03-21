@@ -1,6 +1,6 @@
 import multer from "multer";
 
-import config from "config.js";
+import config from "../config";
 
 export const VideoUpload = multer({
 	dest: config.upload.dest + "/videos",

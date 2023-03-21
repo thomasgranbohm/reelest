@@ -3,11 +3,9 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import Joi from "joi";
 
-import config from "config.js";
-
-import prisma from "database/client.js";
-
-import checkUserAuthentification from "lib/checkUserAuthentification.js";
+import config from "../config";
+import prisma from "../database/client";
+import checkUserAuthentification from "../lib/checkUserAuthentification";
 import {
 	CannotSubscribeToSelf,
 	CustomError,
@@ -15,13 +13,11 @@ import {
 	InvalidCredentialsError,
 	MalformedBodyError,
 	NotFoundError,
-} from "lib/errors.js";
-import parseWhereOptions from "lib/parseWhereOptions.js";
-import PromiseHandler from "lib/PromiseHandler.js";
-
-import { signToken } from "services/JWT.js";
-
-import { LoginValidationSchema, RegisterValidationSchema } from "types/user.js";
+} from "../lib/errors";
+import parseWhereOptions from "../lib/parseWhereOptions";
+import PromiseHandler from "../lib/PromiseHandler";
+import { signToken } from "../services/JWT";
+import { LoginValidationSchema, RegisterValidationSchema } from "../types/user";
 
 // Create
 const createUser = PromiseHandler(async (req: Request, res: Response) => {

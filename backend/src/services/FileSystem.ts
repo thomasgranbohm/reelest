@@ -1,19 +1,16 @@
 import { Video, VideoStatus } from "@prisma/client";
 import fs from "fs/promises";
 
-import prisma from "database/client.js";
-
+import prisma from "../database/client";
 import {
 	getThumbnailPath,
 	getVideoMediaPath,
 	getWebsitePath,
-	stripFileSystemPath,
-} from "lib/paths.js";
-
+} from "../lib/paths";
 import {
 	generateAppropriateThumbnails,
 	generateStreamFiles,
-} from "services/FFmpeg.js";
+} from "../services/FFmpeg";
 
 export async function handleVideoUpload(
 	video: Pick<Video, "status" | "id">,

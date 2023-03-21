@@ -1,9 +1,8 @@
 import { Prisma, Video } from "@prisma/client";
 import path from "path";
 
-import config from "config.js";
-
-import { Thumbnail } from "types/thumbnail";
+import config from "../config";
+import { Thumbnail } from "../types/thumbnail";
 
 export const getFileSystemPath = (...paths: string[]) => {
 	return path.resolve(config.media.path, ...paths);

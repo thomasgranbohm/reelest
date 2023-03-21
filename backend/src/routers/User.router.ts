@@ -1,9 +1,8 @@
 import { Router } from "express";
 
-import UserController from "controllers/User.controller.js";
-
-import Authentication from "middlewares/Authentication.js";
-import Pagination from "middlewares/Pagination.js";
+import UserController from "../controllers/User.controller";
+import Authentication from "../middlewares/Authentication";
+import Pagination from "../middlewares/Pagination";
 
 const UserRouter = Router();
 

@@ -4,7 +4,7 @@ export class CustomError extends Error {
 	details?: object | string;
 
 	constructor(status: number, message: string, details?: object | string) {
-		super(message, { cause: details });
+		super(message);
 
 		this.details = details;
 		this.message = message;

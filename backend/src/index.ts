@@ -4,14 +4,11 @@ dotenv.config();
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 
-import config from "config.js";
-
-import prisma from "database/client.js";
-
-import { CustomError } from "lib/errors.js";
-
-import UserRouter from "routers/User.router.js";
-import VideoRouter from "routers/Video.router.js";
+import prisma from "./database/client";
+import { CustomError } from "./lib/errors";
+import UserRouter from "./routers/User.router";
+import VideoRouter from "./routers/Video.router";
+import config from "./config";
 
 const server = express();
 

@@ -6,10 +6,9 @@ import path from "path";
 import sharp from "sharp";
 import util from "util";
 
-import config from "config.js";
-
-import { Dimension, Thumbnail } from "types/thumbnail";
-import { Quality } from "types/video";
+import config from "../config";
+import { Dimension, Thumbnail } from "../types/thumbnail";
+import { Quality } from "../types/video";
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
