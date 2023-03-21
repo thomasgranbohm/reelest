@@ -13,7 +13,7 @@ import {
 	InvalidCredentialsError,
 	MalformedBodyError,
 	NotFoundError,
-} from "lib/Errors.js";
+} from "lib/errors.js";
 import parseWhereOptions from "lib/parseWhereOptions.js";
 import PromiseHandler from "lib/PromiseHandler.js";
 

@@ -1,3 +1,4 @@
+import { ImageType } from "@prisma/client";
 import child_process from "child_process";
 import ffmpegPath from "ffmpeg-static";
 import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
@@ -7,6 +8,7 @@ import util from "util";
 
 import config from "config.js";
 
+import { Dimension, Thumbnail } from "types/thumbnail";
 import { Quality } from "types/video";
 
 ffmpeg.setFfmpegPath(ffmpegPath);
@@ -102,21 +104,56 @@ export const generateStreamFiles = async (
 	return true;
 };
 
+export const generateThumbnail = (
+	source: string,
+	{ height, width }: Dimension
+) => {
+	return sharp(source).resize(width, height, { fit: "contain" });
+};
+
+export const generateBase64Thumbnail = async (
+	source: string,
+	dimension: Dimension
+): Promise<Thumbnail> => {
+	const buffer = await generateThumbnail(source, dimension).jpeg().toBuffer();
+
+	return {
+		...dimension,
+		type: ImageType.BASE64,
+		url: "data:image/jpeg;base64," + Buffer.from(buffer).toString("base64"),
+	};
+};
+
+export const generateWebPThumbnail = async (
+	source: string,
+	dimension: Dimension,
+	destination: string
+): Promise<Thumbnail> => {
+	await generateThumbnail(source, dimension).webp().toFile(destination);
+
+	return {
+		...dimension,
+		type: "WEBP",
+		url: destination,
+	};
+};
+
 export const generateAppropriateThumbnails = async (
 	source: string,
 	destination: string
 ) => {
-	const applicableQualities = config.ffmpeg.qualities.slice(); // TODO: calculate.
+	const applicableQualities = config.ffmpeg.qualities.slice();
 
-	const [base64] = await Promise.all([
-		sharp(source).resize(32, 18, { fit: "contain" }).jpeg().toBuffer(),
+	const thumbnails = await Promise.all([
+		generateBase64Thumbnail(source, { height: 18, width: 32 }),
 		...applicableQualities.map(({ height, width }) =>
-			sharp(source)
-				.resize(width, height, { fit: "contain" })
-				.webp()
-				.toFile(path.resolve(destination, `thumbnail-${width}.webp`))
+			generateWebPThumbnail(
+				source,
+				{ height, width },
+				path.resolve(destination, `thumbnail-${width}p.webp`)
+			)
 		),
 	]);
 
-	return base64;
+	return thumbnails;
 };

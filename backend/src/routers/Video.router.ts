@@ -21,7 +21,7 @@ VideoRouter.get(
 );
 
 VideoRouter.get(
-	"/:id/thumbnails/:thumbnail(thumbnail-[0-9]{3,4}.webp|thumbnail.b64)",
+	"/:id/thumbnails/:thumbnail(thumbnail-[0-9]{3,4}p.webp)",
 	VideoController.getVideoThumbnail
 );
 

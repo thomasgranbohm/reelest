@@ -3,7 +3,12 @@ import fs from "fs/promises";
 
 import prisma from "database/client.js";
 
-import getMediaPath from "lib/getMediaPath.js";
+import {
+	getThumbnailPath,
+	getVideoMediaPath,
+	getWebsitePath,
+	stripFileSystemPath,
+} from "lib/paths.js";
 
 import {
 	generateAppropriateThumbnails,
@@ -18,7 +23,7 @@ export async function handleVideoUpload(
 		return false;
 	}
 
-	const destDir = getMediaPath(video);
+	const destDir = getVideoMediaPath(video);
 
 	// Create destination dir
 	await fs.mkdir(destDir);
@@ -39,20 +44,48 @@ export async function handleThumbnailUpload(
 	video: Pick<Video, "status" | "id">,
 	file: Express.Multer.File
 ): Promise<boolean> {
-	const destDir = getMediaPath(video, "thumbnails");
+	const thumbnailsDir = getThumbnailPath(video);
 
 	try {
-		await fs.stat(destDir);
+		await fs.stat(thumbnailsDir);
+
+		await fs.rm(thumbnailsDir, { force: true, recursive: true });
 	} catch (error) {
-		await fs.mkdir(destDir);
+		//
 	}
 
-	const base64 = await generateAppropriateThumbnails(file.path, destDir);
+	await fs.mkdir(thumbnailsDir);
+
+	const thumbnails = await generateAppropriateThumbnails(
+		file.path,
+		thumbnailsDir
+	);
 
 	await fs.rm(file.path);
 
+	await prisma.thumbnail.deleteMany({
+		where: { videoId: video.id },
+	});
+
 	await prisma.video.update({
-		data: { thumbnail: Buffer.from(base64.buffer).toString("base64") },
+		data: {
+			thumbnails: {
+				createMany: {
+					data: thumbnails.map((thumbnail) =>
+						thumbnail.type === "WEBP"
+							? {
+									...thumbnail,
+									url: getWebsitePath(
+										thumbnail.url,
+										"videos"
+									),
+									// eslint-disable-next-line no-mixed-spaces-and-tabs
+							  }
+							: thumbnail
+					),
+				},
+			},
+		},
 		where: { id: video.id },
 	});
 

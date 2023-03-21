@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 
-import { ForbiddenError, UnauthorizedError } from "lib/Errors.js";
+import { ForbiddenError, UnauthorizedError } from "lib/errors.js";
 import getTokenString from "lib/getTokenString.js";
 import PromiseHandler from "lib/PromiseHandler.js";
 

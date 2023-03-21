@@ -1,7 +1,12 @@
 export interface IVideo {
 	description?: string;
 	id: string;
-	thumbnail: string;
+	thumbnails: {
+		height: number;
+		type: "WEBP" | "BASE64";
+		url: string;
+		width: number;
+	}[];
 	title: string;
 	user: {
 		displayName: string;

@@ -4,30 +4,33 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { WithClassname } from "types/components";
+import { IVideo } from "types/video";
 import getVideoThumbnail from "utils/getVideoThumbnail";
 
 const VideoPreview: FC<VideoPreviewProps> = ({
 	className,
 	id,
-	thumbnail,
+	thumbnails,
 	title,
 	user,
 }) => {
+	const base64 = thumbnails.find(({ type }) => type === "BASE64");
+
 	return (
 		<div className="inline-block w-full">
 			<Link
 				href={`/video/${id}`}
 				className={clsx("group inline-block w-full", className)}
 			>
-				{thumbnail ? (
+				{thumbnails && base64 ? (
 					<Image
-						src={getVideoThumbnail({ id }, 1920)}
+						src={getVideoThumbnail({ id, thumbnails }, 3840)}
 						alt={`Thumbnail for ${title}`}
 						className="aspect-video w-full rounded-md object-contain transition-shadow group-hover:shadow-xl"
 						width={1920}
 						height={1080}
 						placeholder="blur"
-						blurDataURL={`data:image/jpeg;base64,${thumbnail}`}
+						blurDataURL={base64?.url}
 					/>
 				) : (
 					<div className="flex aspect-video w-full items-center justify-center rounded-md bg-gray-100 object-contain p-4 transition-shadow group-hover:shadow-xl">
@@ -45,15 +48,6 @@ const VideoPreview: FC<VideoPreviewProps> = ({
 	);
 };
 
-interface VideoPreviewProps extends WithClassname {
-	description?: string;
-	id: string;
-	thumbnail: string;
-	title: string;
-	user: {
-		displayName: string;
-		username: string;
-	};
-}
+interface VideoPreviewProps extends WithClassname, IVideo {}
 
 export default VideoPreview;

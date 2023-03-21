@@ -10,8 +10,9 @@ const config = {
 		user: process.env.DATABASE_USER || "root",
 	},
 	express: {
-		ip: "127.0.0.1",
+		host: "localhost",
 		port: process.env.PORT || 1337,
+		proto: "http",
 	},
 	ffmpeg: {
 		qualities: [
@@ -54,6 +55,11 @@ const config = {
 	},
 	jsonwebtoken: {
 		secret: process.env.JWT_SECRET || "abcdefgh01234567",
+	},
+	media: {
+		path:
+			process.env.MEDIA_PATH ||
+			"/home/thomas/Projects/reelest/backend/media",
 	},
 	upload: {
 		dest: process.env.UPLOAD_DIR || "/tmp/uploads",

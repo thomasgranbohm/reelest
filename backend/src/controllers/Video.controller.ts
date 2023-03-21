@@ -13,9 +13,9 @@ import {
 	NotFoundError,
 	StillProcessingError,
 	UnauthorizedError,
-} from "lib/Errors.js";
-import getMediaPath from "lib/getMediaPath.js";
+} from "lib/errors.js";
 import getTokenString from "lib/getTokenString.js";
+import { getThumbnailPath, getVideoMediaPath } from "lib/paths.js";
 import PromiseHandler from "lib/PromiseHandler.js";
 
 import {
@@ -60,6 +60,15 @@ const getVideos = PromiseHandler(async (req, res) => {
 	const [videos, count] = await Promise.all([
 		prisma.video.findMany({
 			include: {
+				thumbnails: {
+					select: {
+						height: true,
+						type: true,
+						url: true,
+						width: true,
+					},
+					take: 10,
+				},
 				user: { select: { displayName: true, username: true } },
 			},
 			orderBy: { updatedAt: "desc" },
@@ -90,7 +99,10 @@ const getVideo = PromiseHandler(async (req, res) => {
 			description: true,
 			id: true,
 			status: true,
-			thumbnail: true,
+			thumbnails: {
+				select: { height: true, type: true, url: true, width: true },
+				take: 10,
+			},
 			title: true,
 			user: {
 				select: {
@@ -144,7 +156,7 @@ const getVideoStream = PromiseHandler(async (req, res) => {
 	}
 
 	try {
-		const streamPath = getMediaPath(video, stream);
+		const streamPath = getVideoMediaPath(video, stream);
 		fs.stat(streamPath);
 
 		return res.sendFile(streamPath);
@@ -157,7 +169,13 @@ const getVideoThumbnail = PromiseHandler(async (req, res) => {
 	const { id, thumbnail } = req.params;
 
 	const video = await prisma.video.findUnique({
-		include: { user: { select: { id: true } } },
+		include: {
+			thumbnails: {
+				select: { height: true, url: true, width: true },
+				take: 10,
+			},
+			user: { select: { id: true } },
+		},
 		where: { id },
 	});
 
@@ -177,10 +195,10 @@ const getVideoThumbnail = PromiseHandler(async (req, res) => {
 	}
 
 	try {
-		const streamPath = getMediaPath(video, "thumbnails", thumbnail);
-		await fs.stat(streamPath);
+		const thumbnailPath = getThumbnailPath(video, thumbnail);
+		await fs.stat(thumbnailPath);
 
-		return res.sendFile(streamPath);
+		return res.sendFile(thumbnailPath);
 	} catch (error) {
 		throw NotFoundError();
 	}
@@ -241,7 +259,7 @@ const deleteVideo = PromiseHandler(async (req, res) => {
 
 	await prisma.video.delete({ where: { id: video.id } });
 
-	fs.rm(getMediaPath(video), { force: true, recursive: true });
+	fs.rm(getVideoMediaPath(video), { force: true, recursive: true });
 
 	return res.status(200).send({ data: { message: "Deleted video" } });
 });

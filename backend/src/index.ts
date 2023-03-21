@@ -8,7 +8,7 @@ import config from "config.js";
 
 import prisma from "database/client.js";
 
-import { CustomError } from "lib/Errors.js";
+import { CustomError } from "lib/errors.js";
 
 import UserRouter from "routers/User.router.js";
 import VideoRouter from "routers/Video.router.js";
@@ -42,7 +42,7 @@ const main = async () => {
 	server.listen(config.express.port, () =>
 		console.log(
 			"Started at http://%s:%d",
-			config.express.ip,
+			config.express.host,
 			config.express.port
 		)
 	);
