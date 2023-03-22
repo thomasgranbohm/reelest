@@ -25,9 +25,9 @@ server.get("/", (_, res) => res.send("Hello, World!"));
 // Error handling
 server.use((err: unknown, _: Request, res: Response, next: NextFunction) => {
 	if (err instanceof CustomError) {
-		const { status, ...error } = err;
+		const { details, message, status } = err;
 
-		return res.status(status).send({ error });
+		return res.status(status).send({ error: { details, message, status } });
 	}
 
 	next(err);
