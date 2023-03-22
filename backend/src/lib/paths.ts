@@ -47,5 +47,5 @@ export const getProfilePicturePath = (
 	user: Pick<User, "username">,
 	version?: string
 ) => {
-	return getUserMediaPath(user, version || "");
+	return getUserMediaPath(user, "pictures", version || "");
 };

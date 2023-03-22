@@ -17,8 +17,8 @@ interface Option extends Dimension, Omit<ResizeOptions, "width" | "height"> {}
 export const generateStreamFiles = async (
 	source: string,
 	destination: string
-) => {
-	const { streams } = await new Promise<FfprobeData>((res) => {
+): Promise<number> => {
+	const { format, streams } = await new Promise<FfprobeData>((res) => {
 		ffmpeg.ffprobe(source, (_, data) => {
 			res(data);
 		});
@@ -102,7 +102,7 @@ export const generateStreamFiles = async (
 	);
 	console.timeEnd(timeLogLabel);
 
-	return true;
+	return format.duration || -1;
 };
 
 export const generateThumbnail = (source: string, option: Option) => {

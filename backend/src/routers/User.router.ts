@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import config from "../config";
 import UserController from "../controllers/User.controller";
 import Authentication from "../middlewares/Authentication";
 import Pagination from "../middlewares/Pagination";
@@ -77,6 +78,14 @@ UserRouter.get("/me/videos", Authentication, Pagination, (req, res, next) => {
 	UserController.getUserVideos(req, res, next);
 });
 UserRouter.get("/:username/videos", Pagination, UserController.getUserVideos);
+
+// Get user profile picture
+UserRouter.get(
+	`/:username/pictures/:picture(${Object.values(config.ffmpeg.profiles)
+		.map(({ size }) => `profile-${size}p.webp`)
+		.join("|")})`,
+	UserController.getUserProfilePicture
+);
 
 // Create follower
 UserRouter.post(

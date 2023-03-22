@@ -56,7 +56,11 @@ const createVideo = PromiseHandler(async (req, res) => {
 const getVideos = PromiseHandler(async (req, res) => {
 	const [videos, count] = await Promise.all([
 		prisma.video.findMany({
-			include: {
+			orderBy: { updatedAt: "desc" },
+			select: {
+				createdAt: true,
+				duration: true,
+				id: true,
 				thumbnails: {
 					select: {
 						height: true,
@@ -66,8 +70,10 @@ const getVideos = PromiseHandler(async (req, res) => {
 					},
 					take: 10,
 				},
+				title: true,
 				user: {
 					select: {
+						_count: { select: { followedBy: true } },
 						displayName: true,
 						profilePictures: {
 							where: {
@@ -83,7 +89,6 @@ const getVideos = PromiseHandler(async (req, res) => {
 					},
 				},
 			},
-			orderBy: { updatedAt: "desc" },
 			skip: req.pagination.skip,
 			take: req.pagination.take,
 			where: { status: VideoStatus.PUBLISHED },
@@ -110,6 +115,7 @@ const getVideo = PromiseHandler(async (req, res) => {
 		select: {
 			createdAt: true,
 			description: true,
+			duration: true,
 			id: true,
 			status: true,
 			thumbnails: {
@@ -193,10 +199,6 @@ const getVideoThumbnail = PromiseHandler(async (req, res) => {
 
 	const video = await prisma.video.findUnique({
 		include: {
-			thumbnails: {
-				select: { height: true, url: true, width: true },
-				take: 10,
-			},
 			user: { select: { id: true } },
 		},
 		where: { id },
@@ -250,6 +252,11 @@ const updateVideo = PromiseHandler(async (req, res) => {
 		throw NotFoundError();
 	} else if (existingVideo.userId !== req.auth.payload.id) {
 		throw UnauthorizedError();
+	} else if (
+		existingVideo.status === VideoStatus.PROCESSING &&
+		value.status
+	) {
+		throw StillProcessingError();
 	}
 
 	if (req.file) {

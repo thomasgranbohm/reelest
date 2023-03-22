@@ -86,9 +86,9 @@ const config = {
 				width: 120,
 			},
 			{
-				height: 24,
+				height: 12,
 				type: ImageType.BASE64,
-				width: 32,
+				width: 16,
 			},
 		],
 	},

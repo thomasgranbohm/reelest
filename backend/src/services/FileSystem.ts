@@ -27,12 +27,12 @@ export async function handleVideoUpload(
 	// Create destination dir
 	await fs.mkdir(destDir);
 
-	await generateStreamFiles(file.path, destDir);
+	const duration = await generateStreamFiles(file.path, destDir);
 
 	await fs.rm(file.path);
 
 	await prisma.video.update({
-		data: { status: "CREATED" },
+		data: { duration: Math.round(duration), status: "CREATED" },
 		where: { id: video.id },
 	});
 
@@ -69,7 +69,7 @@ export async function handleVideoThumbnailUpload(
 						...thumbnail,
 						url:
 							thumbnail.type === "WEBP"
-								? getWebsitePath(thumbnail.url, "users")
+								? getWebsitePath(thumbnail.url)
 								: thumbnail.url,
 					})),
 				},
@@ -108,7 +108,7 @@ export async function handleProfilePictureUpload(
 						...thumbnail,
 						url:
 							thumbnail.type === "WEBP"
-								? getWebsitePath(thumbnail.url, "users")
+								? getWebsitePath(thumbnail.url)
 								: thumbnail.url,
 					})),
 				},

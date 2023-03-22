@@ -1,6 +1,7 @@
 import { Prisma, VideoStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
+import fs from "fs/promises";
 import Joi from "joi";
 
 import config from "../config";
@@ -14,6 +15,7 @@ import {
 	NotFoundError,
 } from "../lib/errors";
 import parseWhereOptions from "../lib/parseWhereOptions";
+import { getProfilePicturePath } from "../lib/paths";
 import PromiseHandler from "../lib/PromiseHandler";
 import { transformUser, transformVideo } from "../lib/transformer";
 import { handleProfilePictureUpload } from "../services/FileSystem";
@@ -275,6 +277,27 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 	});
 });
 
+const getUserProfilePicture = PromiseHandler(async (req, res) => {
+	const { picture, username } = req.params;
+
+	const user = await prisma.user.findUnique({
+		where: { username },
+	});
+
+	if (user === null) {
+		throw NotFoundError();
+	}
+
+	try {
+		const picturePath = getProfilePicturePath(user, picture);
+		await fs.stat(picturePath);
+
+		return res.sendFile(picturePath);
+	} catch (error) {
+		throw NotFoundError();
+	}
+});
+
 // Update
 const updateUser = PromiseHandler(async (req, res) => {
 	const { error, value } = Joi.object<{ displayName: string }>({
@@ -384,6 +407,7 @@ export default {
 	getUser,
 	getUserFollowers,
 	getUserFollowing,
+	getUserProfilePicture,
 	getUserVideos,
 	updateUser,
 };
