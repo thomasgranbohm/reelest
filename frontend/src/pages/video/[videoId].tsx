@@ -1,5 +1,6 @@
 import { privateAPI } from "api";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import DateDisplay from "components/DateDisplay";
@@ -22,15 +23,26 @@ const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
 						{title}
 					</Heading>
 					<div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-						<div className="flex flex-col items-start justify-start">
-							<Link
-								className="inline-block hover:underline"
-								href={`/user/${user.username}`}
-							>
-								<b>{user.displayName}</b>
-							</Link>
-							<p>{user._count.followedBy} followers</p>
-						</div>
+						<Link
+							href={`/users/${user.username}`}
+							className="group/user"
+						>
+							<div className="flex items-start justify-start">
+								<Image
+									src={`/api${user.profilePictures.small.url}`}
+									alt={`Profile picture for ${user.username}`}
+									width={user.profilePictures.small.width}
+									height={user.profilePictures.small.height}
+									className="h-12 w-12 rounded-full"
+								/>
+								<div className="ml-2 flex flex-col items-start justify-center">
+									<b className="group-hover/user:underline">
+										{user.displayName}
+									</b>
+									<p>{user._count.followedBy} followers</p>
+								</div>
+							</div>
+						</Link>
 						<div className="flex items-center">
 							<p>10 views</p>
 							<Separator variant="dot" />
