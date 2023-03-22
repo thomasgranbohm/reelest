@@ -108,6 +108,15 @@ const config = {
 		video_mimetypes: ["video/mp4"],
 	},
 	validation: {
+		comment: {
+			content: Joi.string().min(1).max(180),
+			replyToId: Joi.string(),
+		},
+		generic: {
+			objectId: Joi.string()
+				.length(24)
+				.regex(/^[a-z0-9]{24}$/),
+		},
 		user: {
 			displayName: Joi.string()
 				.pattern(

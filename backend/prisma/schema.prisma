@@ -21,6 +21,7 @@ model User {
     updatedAt       DateTime         @default(now())
     username        String           @unique
     videos          Video[]
+    comments        Comment[]
 }
 
 model Video {
@@ -34,6 +35,7 @@ model Video {
     userId      String      @db.ObjectId
     user        User        @relation(fields: [userId], references: [id])
     thumbnails  Thumbnail[]
+    threads     Thread[]
 }
 
 enum VideoStatus {
@@ -65,4 +67,24 @@ model Thumbnail {
     video   Video     @relation(fields: [videoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     videoId String    @db.ObjectId
     width   Int
+}
+
+model Thread {
+    id       String    @id @default(auto()) @map("_id") @db.ObjectId
+    video    Video?    @relation(fields: [videoId], references: [id])
+    videoId  String?   @db.ObjectId
+    comments Comment[]
+}
+
+model Comment {
+    id        String    @id @default(auto()) @map("_id") @db.ObjectId
+    user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    userId    String?   @db.ObjectId
+    thread    Thread?   @relation(fields: [threadId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    threadId  String?   @db.ObjectId
+    replyToId String?   @db.ObjectId
+    replyTo   Comment?  @relation("CommentReplies", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    replies   Comment[] @relation("CommentReplies")
+    createdAt DateTime  @default(now())
+    content   String
 }
