@@ -15,6 +15,7 @@ import {
 import getTokenString from "../lib/getTokenString";
 import { getVideoMediaPath, getVideoThumbnailPath } from "../lib/paths";
 import PromiseHandler from "../lib/PromiseHandler";
+import { transformVideo } from "../lib/transformer";
 import {
 	handleVideoThumbnailUpload,
 	handleVideoUpload,
@@ -65,7 +66,22 @@ const getVideos = PromiseHandler(async (req, res) => {
 					},
 					take: 10,
 				},
-				user: { select: { displayName: true, username: true } },
+				user: {
+					select: {
+						displayName: true,
+						profilePictures: {
+							where: {
+								width: {
+									in: [
+										config.ffmpeg.profiles.base64.size,
+										config.ffmpeg.profiles.small.size,
+									],
+								},
+							},
+						},
+						username: true,
+					},
+				},
 			},
 			orderBy: { updatedAt: "desc" },
 			skip: req.pagination.skip,
@@ -78,7 +94,7 @@ const getVideos = PromiseHandler(async (req, res) => {
 	]);
 
 	return res.send({
-		data: videos,
+		data: videos.map(transformVideo),
 		pagination: {
 			skip: req.pagination.skip,
 			take: req.pagination.take,
@@ -136,7 +152,7 @@ const getVideo = PromiseHandler(async (req, res) => {
 		throw NotFoundError();
 	}
 
-	return res.send({ data: { video } });
+	return res.send({ data: { video: transformVideo(video) } });
 });
 
 const getVideoStream = PromiseHandler(async (req, res) => {

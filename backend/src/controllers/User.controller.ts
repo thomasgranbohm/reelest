@@ -8,7 +8,6 @@ import prisma from "../database/client";
 import checkUserAuthentification from "../lib/checkUserAuthentification";
 import {
 	CannotSubscribeToSelf,
-	CustomError,
 	InternalServerError,
 	InvalidCredentialsError,
 	MalformedBodyError,
@@ -16,6 +15,7 @@ import {
 } from "../lib/errors";
 import parseWhereOptions from "../lib/parseWhereOptions";
 import PromiseHandler from "../lib/PromiseHandler";
+import { transformUser, transformVideo } from "../lib/transformer";
 import { handleProfilePictureUpload } from "../services/FileSystem";
 import { signToken } from "../services/JWT";
 import { LoginValidationSchema, RegisterValidationSchema } from "../types/user";
@@ -126,6 +126,7 @@ const getUser = PromiseHandler(async (req: Request, res: Response) => {
 			},
 			displayName: true,
 			profilePictures: {
+				select: { height: true, type: true, url: true, width: true },
 				where: {
 					width: { notIn: [config.ffmpeg.profiles.large.size] },
 				},
@@ -142,7 +143,7 @@ const getUser = PromiseHandler(async (req: Request, res: Response) => {
 		throw NotFoundError();
 	}
 
-	return res.send({ data: { user } });
+	return res.send({ data: { user: transformUser({ ...user }) } });
 });
 
 const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
@@ -183,7 +184,7 @@ const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 	}
 
 	return res.send({
-		data: user.followedBy,
+		data: user.followedBy.map(transformUser),
 		skip: req.pagination.skip,
 		take: req.pagination.take,
 		total: user._count.followedBy,
@@ -199,7 +200,20 @@ const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 		select: {
 			_count: { select: { following: true } },
 			following: {
-				select: { displayName: true, username: true },
+				select: {
+					displayName: true,
+					profilePictures: {
+						where: {
+							width: {
+								in: [
+									config.ffmpeg.profiles.base64.size,
+									config.ffmpeg.profiles.small.size,
+								],
+							},
+						},
+					},
+					username: true,
+				},
 				skip: req.pagination.skip,
 				take: req.pagination.take,
 			},
@@ -215,7 +229,7 @@ const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 	}
 
 	return res.send({
-		data: user.following,
+		data: user.following.map(transformUser),
 		skip: req.pagination.skip,
 		take: req.pagination.take,
 		total: user._count.following,
@@ -252,7 +266,7 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 	]);
 
 	return res.send({
-		data: videos,
+		data: videos.map(transformVideo),
 		pagination: {
 			skip: req.pagination.skip + req.pagination.take,
 			take: req.pagination.take,
@@ -333,7 +347,7 @@ const authenticateUser = PromiseHandler(async (req: Request, res: Response) => {
 	}).validate(req.body);
 
 	if (error) {
-		throw new CustomError(400, "Malformed body");
+		throw MalformedBodyError();
 	}
 
 	const user = await prisma.user.findFirst({
