@@ -3,7 +3,7 @@ import child_process from "child_process";
 import ffmpegPath from "ffmpeg-static";
 import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
 import path from "path";
-import sharp from "sharp";
+import sharp, { ResizeOptions } from "sharp";
 import util from "util";
 
 import config from "../config";
@@ -11,6 +11,8 @@ import { Dimension, Thumbnail } from "../types/thumbnail";
 import { Quality } from "../types/video";
 
 ffmpeg.setFfmpegPath(ffmpegPath);
+
+interface Option extends Dimension, Omit<ResizeOptions, "width" | "height"> {}
 
 export const generateStreamFiles = async (
 	source: string,
@@ -103,61 +105,87 @@ export const generateStreamFiles = async (
 	return true;
 };
 
-export const generateThumbnail = (
-	source: string,
-	{ height, width }: Dimension
-) => {
-	return sharp(source).resize(width, height, { fit: "contain" });
+export const generateThumbnail = (source: string, option: Option) => {
+	return sharp(source).resize({ fit: "contain", ...option });
 };
 
 export const generateBase64Thumbnail = async (
 	source: string,
-	dimension: Dimension
+	option: Option
 ): Promise<Thumbnail> => {
-	const buffer = await generateThumbnail(source, dimension).jpeg().toBuffer();
+	const buffer = await generateThumbnail(source, option).jpeg().toBuffer();
+
+	const { height, width } = option;
 
 	return {
-		...dimension,
+		height,
 		type: ImageType.BASE64,
 		url: "data:image/jpeg;base64," + Buffer.from(buffer).toString("base64"),
+		width,
 	};
 };
 
 export const generateWebPThumbnail = async (
 	source: string,
-	dimension: Dimension,
+	option: Option,
 	destination: string
 ): Promise<Thumbnail> => {
-	await generateThumbnail(source, dimension).webp().toFile(destination);
+	await generateThumbnail(source, option).webp().toFile(destination);
+
+	const { height, width } = option;
 
 	return {
-		...dimension,
+		height,
 		type: "WEBP",
 		url: destination,
+		width,
 	};
 };
 
-export const generateAppropriateThumbnails = async (
+export const generateVideoThumbnails = async (
 	source: string,
 	destination: string
 ) => {
-	const applicableThumbnails = config.ffmpeg.thumbnails.slice();
+	const applicableFormats = config.ffmpeg.thumbnails.slice();
 
 	const thumbnails = await Promise.all(
-		applicableThumbnails.map(({ type, ...thumbnail }) =>
+		applicableFormats.map(({ type, ...dimension }) =>
 			type === ImageType.WEBP
 				? generateWebPThumbnail(
 						source,
-						thumbnail,
+						dimension,
 						path.resolve(
 							destination,
-							`thumbnail-${thumbnail.width}p.webp`
+							`thumbnail-${dimension.width}p.webp`
 						)
 						// eslint-disable-next-line no-mixed-spaces-and-tabs
 				  )
-				: generateBase64Thumbnail(source, thumbnail)
+				: generateBase64Thumbnail(source, dimension)
 		)
 	);
 
 	return thumbnails;
+};
+
+export const generateProfilePictures = async (
+	source: string,
+	destination: string
+) => {
+	const pictures = await Promise.all(
+		Object.values(config.ffmpeg.profiles).map(({ size, type }) => {
+			const dimension = { height: size, width: size };
+
+			if (type === ImageType.WEBP) {
+				return generateWebPThumbnail(
+					source,
+					{ ...dimension, fit: "cover" },
+					path.resolve(destination, `profile-${size}p.webp`)
+				);
+			}
+
+			return generateBase64Thumbnail(source, dimension);
+		})
+	);
+
+	return pictures;
 };

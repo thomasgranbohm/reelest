@@ -1,15 +1,14 @@
-import { Prisma, Video } from "@prisma/client";
+import { User, Video } from "@prisma/client";
 import path from "path";
 
 import config from "../config";
-import { Thumbnail } from "../types/thumbnail";
 
 export const getFileSystemPath = (...paths: string[]) => {
-	return path.resolve(config.media.path, ...paths);
+	return path.join(config.media.dir, ...paths);
 };
 
 export const stripFileSystemPath = (path: string, replacement?: string) => {
-	return path.replace(config.media.path, replacement ?? "");
+	return path.replace(config.media.dir, replacement ?? "");
 };
 
 export const getWebsitePath = (url: string, replacement?: string) => {
@@ -27,12 +26,26 @@ export const getVideoMediaPath = (
 	video: Pick<Video, "id">,
 	...paths: string[]
 ) => {
-	return getFileSystemPath(video.id, ...paths);
+	return getFileSystemPath(config.media.videos_dir, video.id, ...paths);
 };
 
-export const getThumbnailPath = (
-	video: Pick<Video, "id">,
-	thumbnail?: string
+export const getUserMediaPath = (
+	user: Pick<User, "username">,
+	...paths: string[]
 ) => {
-	return getVideoMediaPath(video, "thumbnails", thumbnail || "");
+	return getFileSystemPath(config.media.users_dir, user.username, ...paths);
+};
+
+export const getVideoThumbnailPath = (
+	video: Pick<Video, "id">,
+	version?: string
+) => {
+	return getVideoMediaPath(video, "thumbnails", version || "");
+};
+
+export const getProfilePicturePath = (
+	user: Pick<User, "username">,
+	version?: string
+) => {
+	return getUserMediaPath(user, version || "");
 };

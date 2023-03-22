@@ -3,6 +3,7 @@ import { Router } from "express";
 import UserController from "../controllers/User.controller";
 import Authentication from "../middlewares/Authentication";
 import Pagination from "../middlewares/Pagination";
+import { ImageUpload } from "../middlewares/Upload";
 
 const UserRouter = Router();
 
@@ -10,10 +11,19 @@ const UserRouter = Router();
 UserRouter.post("/login", UserController.authenticateUser);
 
 // Create user
-UserRouter.post("/register", UserController.createUser);
+UserRouter.post(
+	"/register",
+	ImageUpload.single("image"),
+	UserController.createUser
+);
 
 // Update user
-UserRouter.put("/", Authentication, UserController.updateUser);
+UserRouter.put(
+	"/",
+	Authentication,
+	ImageUpload.single("image"),
+	UserController.updateUser
+);
 
 // Delete user
 UserRouter.delete("/", Authentication, UserController.deleteUser);

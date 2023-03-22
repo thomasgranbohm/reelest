@@ -16,6 +16,7 @@ import {
 } from "../lib/errors";
 import parseWhereOptions from "../lib/parseWhereOptions";
 import PromiseHandler from "../lib/PromiseHandler";
+import { handleProfilePictureUpload } from "../services/FileSystem";
 import { signToken } from "../services/JWT";
 import { LoginValidationSchema, RegisterValidationSchema } from "../types/user";
 
@@ -44,8 +45,17 @@ const createUser = PromiseHandler(async (req: Request, res: Response) => {
 	try {
 		const user = await prisma.user.create({
 			data: { displayName, email, password, username },
-			select: { displayName: true, email: true, username: true },
+			select: {
+				displayName: true,
+				email: true,
+				id: true,
+				username: true,
+			},
 		});
+
+		if (req.file) {
+			handleProfilePictureUpload(user, req.file);
+		}
 
 		return res.status(201).send({ data: { user } });
 	} catch (error) {
@@ -115,6 +125,11 @@ const getUser = PromiseHandler(async (req: Request, res: Response) => {
 				},
 			},
 			displayName: true,
+			profilePictures: {
+				where: {
+					width: { notIn: [config.ffmpeg.profiles.large.size] },
+				},
+			},
 			username: true,
 		},
 		where: parseWhereOptions<Prisma.UserWhereUniqueInput>({
@@ -139,7 +154,20 @@ const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 		select: {
 			_count: { select: { followedBy: true } },
 			followedBy: {
-				select: { displayName: true, username: true },
+				select: {
+					displayName: true,
+					profilePictures: {
+						where: {
+							width: {
+								in: [
+									config.ffmpeg.profiles.base64.size,
+									config.ffmpeg.profiles.small.size,
+								],
+							},
+						},
+					},
+					username: true,
+				},
 				skip: req.pagination.skip,
 				take: req.pagination.take,
 			},
@@ -241,6 +269,19 @@ const updateUser = PromiseHandler(async (req, res) => {
 
 	if (error) {
 		throw MalformedBodyError(error);
+	}
+
+	const existingUser = await prisma.user.findUnique({
+		select: { id: true, username: true },
+		where: { id: req.auth.payload.id },
+	});
+
+	if (existingUser === null) {
+		throw NotFoundError();
+	}
+
+	if (req.file) {
+		handleProfilePictureUpload(existingUser, req.file);
 	}
 
 	const user = await prisma.user.update({

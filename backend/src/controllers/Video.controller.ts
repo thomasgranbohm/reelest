@@ -13,10 +13,10 @@ import {
 	UnauthorizedError,
 } from "../lib/errors";
 import getTokenString from "../lib/getTokenString";
-import { getThumbnailPath, getVideoMediaPath } from "../lib/paths";
+import { getVideoMediaPath, getVideoThumbnailPath } from "../lib/paths";
 import PromiseHandler from "../lib/PromiseHandler";
 import {
-	handleThumbnailUpload,
+	handleVideoThumbnailUpload,
 	handleVideoUpload,
 } from "../services/FileSystem";
 import { verifyToken } from "../services/JWT";
@@ -106,6 +106,16 @@ const getVideo = PromiseHandler(async (req, res) => {
 					_count: { select: { followedBy: true } },
 					displayName: true,
 					id: true,
+					profilePictures: {
+						where: {
+							width: {
+								in: [
+									config.ffmpeg.profiles.base64.size,
+									config.ffmpeg.profiles.small.size,
+								],
+							},
+						},
+					},
 					username: true,
 				},
 			},
@@ -192,7 +202,7 @@ const getVideoThumbnail = PromiseHandler(async (req, res) => {
 	}
 
 	try {
-		const thumbnailPath = getThumbnailPath(video, thumbnail);
+		const thumbnailPath = getVideoThumbnailPath(video, thumbnail);
 		await fs.stat(thumbnailPath);
 
 		return res.sendFile(thumbnailPath);
@@ -227,7 +237,7 @@ const updateVideo = PromiseHandler(async (req, res) => {
 	}
 
 	if (req.file) {
-		handleThumbnailUpload(existingVideo, req.file);
+		handleVideoThumbnailUpload(existingVideo, req.file);
 	}
 
 	const video = await prisma.video.update({

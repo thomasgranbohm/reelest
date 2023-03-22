@@ -1,15 +1,17 @@
-import { Video, VideoStatus } from "@prisma/client";
+import { User, Video, VideoStatus } from "@prisma/client";
 import fs from "fs/promises";
 
 import prisma from "../database/client";
 import {
-	getThumbnailPath,
+	getProfilePicturePath,
 	getVideoMediaPath,
+	getVideoThumbnailPath,
 	getWebsitePath,
 } from "../lib/paths";
 import {
-	generateAppropriateThumbnails,
+	generateProfilePictures,
 	generateStreamFiles,
+	generateVideoThumbnails,
 } from "../services/FFmpeg";
 
 export async function handleVideoUpload(
@@ -37,11 +39,11 @@ export async function handleVideoUpload(
 	return true;
 }
 
-export async function handleThumbnailUpload(
+export async function handleVideoThumbnailUpload(
 	video: Pick<Video, "status" | "id">,
 	file: Express.Multer.File
 ): Promise<boolean> {
-	const thumbnailsDir = getThumbnailPath(video);
+	const thumbnailsDir = getVideoThumbnailPath(video);
 
 	try {
 		await fs.stat(thumbnailsDir);
@@ -52,12 +54,7 @@ export async function handleThumbnailUpload(
 	}
 
 	await fs.mkdir(thumbnailsDir);
-
-	const thumbnails = await generateAppropriateThumbnails(
-		file.path,
-		thumbnailsDir
-	);
-
+	const thumbnails = await generateVideoThumbnails(file.path, thumbnailsDir);
 	await fs.rm(file.path);
 
 	await prisma.thumbnail.deleteMany({
@@ -68,22 +65,56 @@ export async function handleThumbnailUpload(
 		data: {
 			thumbnails: {
 				createMany: {
-					data: thumbnails.map((thumbnail) =>
-						thumbnail.type === "WEBP"
-							? {
-									...thumbnail,
-									url: getWebsitePath(
-										thumbnail.url,
-										"videos"
-									),
-									// eslint-disable-next-line no-mixed-spaces-and-tabs
-							  }
-							: thumbnail
-					),
+					data: thumbnails.map((thumbnail) => ({
+						...thumbnail,
+						url:
+							thumbnail.type === "WEBP"
+								? getWebsitePath(thumbnail.url, "users")
+								: thumbnail.url,
+					})),
 				},
 			},
 		},
 		where: { id: video.id },
+	});
+
+	return true;
+}
+
+export async function handleProfilePictureUpload(
+	user: Pick<User, "id" | "username">,
+	file: Express.Multer.File
+): Promise<boolean> {
+	const thumbnailsDir = getProfilePicturePath(user);
+
+	try {
+		await fs.stat(thumbnailsDir);
+	} catch (error) {
+		await fs.mkdir(thumbnailsDir);
+	}
+
+	await prisma.profilePicture.deleteMany({
+		where: { userId: user.id },
+	});
+
+	const thumbnails = await generateProfilePictures(file.path, thumbnailsDir);
+	await fs.rm(file.path);
+
+	await prisma.user.update({
+		data: {
+			profilePictures: {
+				createMany: {
+					data: thumbnails.map((thumbnail) => ({
+						...thumbnail,
+						url:
+							thumbnail.type === "WEBP"
+								? getWebsitePath(thumbnail.url, "users")
+								: thumbnail.url,
+					})),
+				},
+			},
+		},
+		where: { id: user.id },
 	});
 
 	return true;

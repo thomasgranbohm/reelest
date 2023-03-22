@@ -16,6 +16,12 @@ const config = {
 		proto: "http",
 	},
 	ffmpeg: {
+		profiles: {
+			base64: { size: 16, type: ImageType.BASE64 },
+			large: { size: 800, type: ImageType.WEBP },
+			medium: { size: 240, type: ImageType.WEBP },
+			small: { size: 88, type: ImageType.WEBP },
+		},
 		qualities: [
 			{
 				bitrate: 34000,
@@ -90,9 +96,11 @@ const config = {
 		secret: process.env.JWT_SECRET || "abcdefgh01234567",
 	},
 	media: {
-		path:
+		dir:
 			process.env.MEDIA_PATH ||
 			"/home/thomas/Projects/reelest/backend/media",
+		users_dir: "/users",
+		videos_dir: "/videos",
 	},
 	upload: {
 		dest: process.env.UPLOAD_DIR || "/tmp/uploads",
