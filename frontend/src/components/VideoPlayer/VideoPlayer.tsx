@@ -211,7 +211,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 			>
 				{videoRef.current && (
 					<div
-						className="group/progress mx-4 cursor-pointer py-2"
+						className="group/progress mx-4 cursor-pointer pt-2"
 						onClick={(e) =>
 							videoRef.current
 								? (videoRef.current.currentTime =
@@ -268,16 +268,15 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 								variant={mute ? "volume_mute" : "volume_up"}
 							/>
 						</Button>
-						{videoRef.current &&
-							!isNaN(videoRef.current.duration) && (
-								<p className="mx-2">
-									<TimeDisplay value={currentTime} />
-									<span className="mx-2">/</span>
-									<TimeDisplay
-										value={videoRef.current.duration}
-									/>
-								</p>
-							)}
+						<p className="mx-2">
+							<TimeDisplay value={currentTime} />
+							<span className="mx-2">/</span>
+							<TimeDisplay
+								value={
+									videoRef.current?.duration || video.duration
+								}
+							/>
+						</p>
 					</div>
 					<div className="flex h-full items-center">
 						<div className="group/settings relative h-full p-3">

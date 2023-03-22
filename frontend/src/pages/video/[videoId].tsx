@@ -7,6 +7,7 @@ import DateDisplay from "components/DateDisplay";
 import { Column, Row } from "components/Grid";
 import Heading from "components/Heading";
 import Layout from "components/Layout";
+import NumberDisplay from "components/NumberDisplay";
 import Separator from "components/Separator";
 import VideoPlayer from "components/VideoPlayer";
 import { IVideo } from "types/video";
@@ -19,7 +20,7 @@ const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
 			<Row>
 				<Column xl={9}>
 					<VideoPlayer video={video} />
-					<Heading type="h2" look="h4" className="mt-4">
+					<Heading type="h1" look="h5" className="mt-4">
 						{title}
 					</Heading>
 					<div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -39,12 +40,26 @@ const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
 									<b className="group-hover/user:underline">
 										{user.displayName}
 									</b>
-									<p>{user._count.followedBy} followers</p>
+									<p>
+										<NumberDisplay
+											style="decimal"
+											notation="compact"
+											value={user._count.followedBy}
+										/>{" "}
+										followers
+									</p>
 								</div>
 							</div>
 						</Link>
 						<div className="flex items-center">
-							<p>10 views</p>
+							<p>
+								<NumberDisplay
+									style="decimal"
+									notation="compact"
+									value={10}
+								/>{" "}
+								views
+							</p>
 							<Separator variant="dot" />
 							<DateDisplay date={video.createdAt} relative />
 						</div>

@@ -22,7 +22,7 @@ const VideoPreview: FC<VideoPreviewProps> = ({
 	const base64 = thumbnails.find(({ type }) => type === "BASE64");
 
 	return (
-		<div className="inline-block w-full">
+		<div className="flex w-full flex-col">
 			<Link
 				href={`/video/${id}`}
 				className={clsx(
