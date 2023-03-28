@@ -17,14 +17,33 @@ export interface IVideo {
 	description?: string;
 	duration: number;
 	id: string;
+	threads: Array<IThread>;
 	thumbnails: Array<IImage>;
 	title: string;
-	user: {
-		_count: {
-			followedBy: number;
-		};
-		displayName: string;
-		profilePictures: IImageFormats;
-		username: string;
+	user: IUser;
+}
+
+export interface IUser {
+	_count: {
+		followedBy: number;
 	};
+	displayName: string;
+	id: string;
+	profilePictures: IImageFormats;
+	username: string;
+}
+
+export interface IThread {
+	content: string;
+	id: string;
+	replies: IComment[];
+	user: IUser;
+	users: Record<string, IUser>;
+}
+
+export interface IComment {
+	content: string;
+	id: string;
+	replyToId: string | null;
+	username: string;
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import DateDisplay from "components/DateDisplay";
 import TimeDisplay from "components/TimeDisplay";
+import WithProfilePicture from "components/WithProfilePicture";
 import { WithClassname } from "types/components";
 import { IVideo } from "types/video";
 import getVideoThumbnail from "utils/getVideoThumbnail";
@@ -49,35 +50,17 @@ const VideoPreview: FC<VideoPreviewProps> = ({
 					<TimeDisplay value={duration} />
 				</div>
 			</Link>
-			<div className="mt-2 flex items-start justify-start ">
-				<Link href={`/users/${user.username}`} className="group/user">
-					<Image
-						src={`/api${user.profilePictures.small.url}`}
-						alt={`Profile picture for ${user.username}`}
-						width={user.profilePictures.small.width}
-						height={user.profilePictures.small.height}
-						className="h-12 w-12 rounded-full"
-					/>
+			<WithProfilePicture user={user} size="normal">
+				<Link href={`/video/${id}`} className="hover:underline">
+					<b>{title}</b>
 				</Link>
-				<div className="ml-2 flex flex-col items-start justify-center">
-					<Link href={`/video/${id}`} className="group">
-						<b className="group-hover:underline">{title}</b>
-					</Link>
-					<Link
-						href={`/users/${user.username}`}
-						className="group/user"
-					>
-						<p className="text-sm group-hover/user:underline">
-							{user.displayName}
-						</p>
-					</Link>
-					<DateDisplay
-						className="text-sm"
-						date={createdAt}
-						relative
-					/>
-				</div>
-			</div>
+				<Link href={`/users/${user.username}`} className="group/user">
+					<p className="text-sm group-hover/user:underline">
+						{user.displayName}
+					</p>
+				</Link>
+				<DateDisplay className="text-sm" date={createdAt} relative />
+			</WithProfilePicture>
 		</div>
 	);
 };

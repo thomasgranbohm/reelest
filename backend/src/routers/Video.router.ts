@@ -32,13 +32,6 @@ VideoRouter.post(
 	VideoController.createVideo
 );
 
-// Create comment
-VideoRouter.post(
-	"/:id/comments",
-	Authentication,
-	VideoController.createVideoComment
-);
-
 // Update video
 VideoRouter.put(
 	"/:id",

@@ -13,7 +13,6 @@ import {
 	UnauthorizedError,
 } from "../lib/errors";
 import getTokenString from "../lib/getTokenString";
-import parseWhereOptions from "../lib/parseWhereOptions";
 import { getVideoMediaPath, getVideoThumbnailPath } from "../lib/paths";
 import PromiseHandler from "../lib/PromiseHandler";
 import { transformVideo } from "../lib/transformer";
@@ -51,75 +50,6 @@ const createVideo = PromiseHandler(async (req, res) => {
 	handleVideoUpload(video, req.file);
 
 	return res.send({ data: { video } });
-});
-
-const createVideoComment = PromiseHandler(async (req, res) => {
-	const { error, value } = Joi.object<{
-		content: string;
-		replyToId?: string;
-		threadId?: string;
-	}>({
-		content: config.validation.comment.content.required(),
-		replyToId: config.validation.generic.objectId,
-		threadId: config.validation.generic.objectId,
-	}).validate(req.body);
-
-	if (error) {
-		throw MalformedBodyError();
-	}
-
-	const { id } = req.params;
-
-	const existingVideo = await prisma.video.findUnique({
-		select: { id: true },
-		where: { id },
-	});
-
-	if (!existingVideo) {
-		throw NotFoundError();
-	}
-
-	if (value.threadId && value.replyToId) {
-		await prisma.video.update({
-			data: {
-				threads: {
-					update: {
-						data: {
-							comments: {
-								create: {
-									content: value.content,
-									replyToId: value.replyToId,
-									userId: req.auth.payload.id,
-								},
-							},
-						},
-						where: {
-							id: value.threadId,
-						},
-					},
-				},
-			},
-			where: { id },
-		});
-	} else {
-		await prisma.video.update({
-			data: {
-				threads: {
-					create: {
-						comments: {
-							create: {
-								content: value.content,
-								userId: req.auth.payload.id,
-							},
-						},
-					},
-				},
-			},
-			where: { id },
-		});
-	}
-
-	return res.status(201).send({});
 });
 
 // Read
@@ -183,6 +113,9 @@ const getVideo = PromiseHandler(async (req, res) => {
 
 	const video = await prisma.video.findUnique({
 		select: {
+			_count: {
+				select: { threads: true },
+			},
 			createdAt: true,
 			description: true,
 			duration: true,
@@ -190,18 +123,7 @@ const getVideo = PromiseHandler(async (req, res) => {
 			status: true,
 			threads: {
 				select: {
-					comments: {
-						select: {
-							content: true,
-							id: true,
-							replyToId: true,
-							user: {
-								select: { displayName: true, username: true },
-							},
-						},
-						take: 10,
-					},
-					id: true,
+					_count: { select: { replies: true } },
 				},
 			},
 			thumbnails: {
@@ -382,7 +304,6 @@ const deleteVideo = PromiseHandler(async (req, res) => {
 
 export default {
 	createVideo,
-	createVideoComment,
 	deleteVideo,
 	getVideo,
 	getVideoStream,

@@ -1,7 +1,5 @@
 import { privateAPI } from "api";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
-import Image from "next/image";
-import Link from "next/link";
 
 import DateDisplay from "components/DateDisplay";
 import { Column, Row } from "components/Grid";
@@ -9,7 +7,9 @@ import Heading from "components/Heading";
 import Layout from "components/Layout";
 import NumberDisplay from "components/NumberDisplay";
 import Separator from "components/Separator";
+import ThreadContainer from "components/ThreadsContainer";
 import VideoPlayer from "components/VideoPlayer";
+import WithUserLink from "components/WithUserLink";
 import { IVideo } from "types/video";
 
 const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
@@ -24,33 +24,16 @@ const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
 						{title}
 					</Heading>
 					<div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-						<Link
-							href={`/users/${user.username}`}
-							className="group/user"
-						>
-							<div className="flex items-start justify-start">
-								<Image
-									src={`/api${user.profilePictures.small.url}`}
-									alt={`Profile picture for ${user.username}`}
-									width={user.profilePictures.small.width}
-									height={user.profilePictures.small.height}
-									className="h-12 w-12 rounded-full"
-								/>
-								<div className="ml-2 flex flex-col items-start justify-center">
-									<b className="group-hover/user:underline">
-										{user.displayName}
-									</b>
-									<p>
-										<NumberDisplay
-											style="decimal"
-											notation="compact"
-											value={user._count.followedBy}
-										/>{" "}
-										followers
-									</p>
-								</div>
-							</div>
-						</Link>
+						<WithUserLink user={user}>
+							<p>
+								<NumberDisplay
+									style="decimal"
+									notation="compact"
+									value={user._count.followedBy}
+								/>{" "}
+								followers
+							</p>
+						</WithUserLink>
 						<div className="flex items-center">
 							<p>
 								<NumberDisplay
@@ -67,6 +50,7 @@ const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
 					<div className="mt-4">
 						<p>{description}</p>
 					</div>
+					<ThreadContainer videoId={video.id} />
 				</Column>
 			</Row>
 		</Layout>
