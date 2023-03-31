@@ -1,4 +1,5 @@
 import { User, Video, VideoStatus } from "@prisma/client";
+import axios from "axios";
 import fs from "fs/promises";
 
 import prisma from "../database/client";
@@ -10,7 +11,6 @@ import {
 } from "../lib/paths";
 import {
 	generateProfilePictures,
-	generateStreamFiles,
 	generateVideoThumbnails,
 } from "../services/FFmpeg";
 
@@ -24,17 +24,9 @@ export async function handleVideoUpload(
 
 	const destDir = getVideoMediaPath(video);
 
-	// Create destination dir
-	await fs.mkdir(destDir);
-
-	const duration = await generateStreamFiles(file.path, destDir);
-
-	await fs.rm(file.path);
-
-	await prisma.video.update({
-		data: { duration: Math.round(duration), status: "CREATED" },
-		where: { id: video.id },
-	});
+	await axios.get(
+		`http://transcoder:8000/?input=${file.path}&output=${destDir}`
+	);
 
 	return true;
 }

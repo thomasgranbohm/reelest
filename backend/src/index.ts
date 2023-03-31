@@ -7,6 +7,7 @@ import express, { NextFunction, Request, Response } from "express";
 import prisma from "./database/client";
 import { CustomError } from "./lib/errors";
 import CommentRouter from "./routers/Comment.router";
+import TranscoderRouter from "./routers/Transcoder.router";
 import UserRouter from "./routers/User.router";
 import VideoRouter from "./routers/Video.router";
 import config from "./config";
@@ -19,6 +20,7 @@ server.use(express.urlencoded({ extended: true }));
 
 // Routers
 server.use("/comments", CommentRouter);
+server.use("/transcoder", TranscoderRouter);
 server.use("/users", UserRouter);
 server.use("/videos", VideoRouter);
 

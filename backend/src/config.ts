@@ -22,43 +22,7 @@ const config = {
 			medium: { size: 240, type: ImageType.WEBP },
 			small: { size: 88, type: ImageType.WEBP },
 		},
-		qualities: [
-			{
-				bitrate: 34000,
-				height: 2160,
-				width: 3840,
-			},
-			{
-				bitrate: 13000,
-				height: 1440,
-				width: 2560,
-			},
-			{
-				bitrate: 6000,
-				height: 1080,
-				width: 1920,
-			},
-			{
-				bitrate: 4000,
-				height: 720,
-				width: 1280,
-			},
-			{
-				bitrate: 2000,
-				height: 480,
-				width: 854, // Non 16:9
-			},
-			{
-				bitrate: 1000,
-				height: 360,
-				width: 640,
-			},
-			{
-				bitrate: 700,
-				height: 240,
-				width: 426, // Non 16:9
-			},
-		],
+		secret: process.env.TRANSCODER_SECRET,
 		thumbnails: [
 			{
 				height: 720,
@@ -96,14 +60,12 @@ const config = {
 		secret: process.env.JWT_SECRET || "abcdefgh01234567",
 	},
 	media: {
-		dir:
-			process.env.MEDIA_PATH ||
-			"/home/thomas/Projects/reelest/backend/media",
+		dir: process.env.MEDIA_PATH || "/media",
 		users_dir: "/users",
 		videos_dir: "/videos",
 	},
 	upload: {
-		dest: process.env.UPLOAD_DIR || "/tmp/uploads",
+		dest: process.env.UPLOAD_DIR || "/uploads",
 		image_mimetypes: ["image/png", "image/jpeg"],
 		video_mimetypes: ["video/mp4"],
 	},

@@ -1,0 +1,9 @@
+database/
+
+media/
+!media/videos/.gitkeep
+!media/images/.gitkeep
+
+uploads/
+!uploads/videos/.gitkeep
+!uploads/images/.gitkeep

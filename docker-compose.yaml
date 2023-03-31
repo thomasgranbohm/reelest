@@ -1,6 +1,23 @@
 version: "3.8"
 
 services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - database
+    env_file: ./backend/.env
+    environment:
+      NODE_ENV: production
+      TRANSCODER_SECRET: ${TRANSCODER_SECRET}
+    ports:
+      - 1337:1337
+    restart: unless-stopped
+    volumes:
+      - ./media:/media
+      - ./uploads:/uploads
+    working_dir: /home/node/app
   database:
     build:
       dockerfile: ./config/mongodb-replica
@@ -9,5 +26,21 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
       MONGO_REPLICA_HOST: localhost
       MONGO_REPLICA_PORT: 27017
+    expose:
+      - 27017
     ports:
       - 27017:27017
+    volumes:
+      - ./database:/data/db
+  transcoder:
+    build:
+      context: ./transcoder
+    expose:
+      - 8000
+    environment:
+      TRANSCODER_SECRET: ${TRANSCODER_SECRET}
+    ports:
+      - 8000:8000
+    volumes:
+      - ./uploads:/uploads
+      - ./media:/media
