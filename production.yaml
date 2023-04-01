@@ -2,19 +2,25 @@ version: "3.8"
 
 services:
   backend:
-    command: npm run dev
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     depends_on:
       - database
-    env_file: ./backend/.env
+    env_file: ./backend/.env.production
     environment:
+      NODE_ENV: production
       TRANSCODER_SECRET: ${TRANSCODER_SECRET}
-    image: node:16
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      MEDIA_DIR: ${MEDIA_DIR}
+    expose:
+      - 1337
     ports:
       - 1337:1337
+    restart: unless-stopped
     volumes:
       - ./uploads:${UPLOAD_DIR}
       - ./media:${MEDIA_DIR}
-      - ./backend:/home/node/app
     working_dir: /home/node/app
   database:
     build:
@@ -26,21 +32,17 @@ services:
       MONGO_REPLICA_PORT: 27017
     expose:
       - 27017
-    ports:
-      - 27017:27017
     volumes:
       - ./database:/data/db
   transcoder:
-    command: cargo run
+    build:
+      context: ./transcoder
     expose:
       - 8000
     environment:
       TRANSCODER_SECRET: ${TRANSCODER_SECRET}
-    image: rust:1.67
-    ports:
-      - 8000:8000
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      MEDIA_DIR: ${MEDIA_DIR}
     volumes:
       - ./uploads:${UPLOAD_DIR}
       - ./media:${MEDIA_DIR}
-      - ./transcoder:/app
-    working_dir: /app

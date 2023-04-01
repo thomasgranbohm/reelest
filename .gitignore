@@ -7,3 +7,6 @@ media/
 uploads/
 !uploads/videos/.gitkeep
 !uploads/images/.gitkeep
+
+.env*
+!.env.example
