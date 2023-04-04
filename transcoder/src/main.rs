@@ -1,6 +1,8 @@
 use std::{
+    env,
     fs::{self, File},
     io::Write,
+    path::Path,
     process::Command,
     thread,
 };
@@ -33,8 +35,10 @@ struct JsonBody {
     duration: f32,
 }
 
-fn get_resolution(source: &String) -> Result<String, String> {
-    let resolution_output = Command::new("ffprobe")
+fn get_resolution(source: &str) -> Result<String, String> {
+    let mut resolution_command = Command::new("ffprobe");
+
+    resolution_command
         .arg("-v")
         .arg("error")
         .arg("-select_streams")
@@ -43,7 +47,10 @@ fn get_resolution(source: &String) -> Result<String, String> {
         .arg("stream=width,height")
         .arg("-of")
         .arg("csv=s=x:p=0")
-        .arg(source)
+        .arg("-i")
+        .arg(source);
+
+    let resolution_output = resolution_command
         .output()
         .expect("Failed to get resolution");
 
@@ -58,7 +65,7 @@ fn get_resolution(source: &String) -> Result<String, String> {
     Ok(dirty.trim().to_string())
 }
 
-fn get_fps(source: &String) -> Result<i32, ()> {
+fn get_fps(source: &str) -> Result<i32, ()> {
     let fps_output = Command::new("ffprobe")
         .args([
             "-v",
@@ -89,7 +96,7 @@ fn get_fps(source: &String) -> Result<i32, ()> {
     Ok(fps)
 }
 
-fn get_duration(source: &String) -> Result<f32, ()> {
+fn get_duration(source: &str) -> Result<f32, ()> {
     let command = Command::new("ffprobe")
         .args([
             "-v",
@@ -117,12 +124,22 @@ fn get_duration(source: &String) -> Result<f32, ()> {
         .unwrap())
 }
 
-fn transcode(source: &String, target: &String) -> bool {
+fn transcode(input: &String, output: &String) -> bool {
+    let source_path = Path::new(&env::var("UPLOAD_DIR").unwrap())
+        .join("videos")
+        .join(input);
+    let source = source_path.to_str().expect("Could not get source path");
+
+    let target_path = Path::new(&env::var("MEDIA_DIR").unwrap())
+        .join("videos")
+        .join(output);
+    let target = target_path.to_str().expect("Could not get path");
+
     println!("{} -> {}", source, target);
 
-    let resolution = get_resolution(&source).expect("Could not get resolution");
-    let fps = get_fps(&source).expect("Could not get FPS");
-    let duration = get_duration(&source).expect("Could not get duration");
+    let resolution = get_resolution(source).expect("Could not get resolution");
+    let fps = get_fps(source).expect("Could not get FPS");
+    let duration = get_duration(source).expect("Could not get duration");
 
     let dimensions: Vec<i32> = resolution
         .to_string()
@@ -158,13 +175,13 @@ fn transcode(source: &String, target: &String) -> bool {
     let mut cpu_rendering = Command::new("ffmpeg");
     cpu_rendering.args(["-hide_banner", "-y", "-i", &source.to_string()]);
 
-    let splits = RENDITIONS
+    let biggest = RENDITIONS
         .iter()
         .enumerate()
         .reduce(|a, b| if b.1 .1 <= source_height { b } else { a })
-        .unwrap()
-        .0
-        + 1;
+        .unwrap();
+
+    let splits = biggest.0 + 1;
 
     cpu_rendering.args([
         "-filter_complex",
@@ -190,16 +207,11 @@ fn transcode(source: &String, target: &String) -> bool {
         ),
     ]);
 
-    let mut prev_height = 0;
-
     let mut master_playlist: Vec<String> =
         vec![String::from("#EXTM3U"), String::from("#EXT-X-VERSION:3")];
 
-    for i in 0..RENDITIONS.len() {
+    for i in 0..splits {
         let (width, height, video_bitrate, audio_bitrate) = RENDITIONS[i];
-        if source_height < prev_height {
-            break;
-        }
 
         let max_rate = video_bitrate as f32 * MAX_BITRATE_RATIO;
         let bufsize = video_bitrate as f32 * RATE_MONITOR_BUFFER_RATIO;
@@ -289,8 +301,6 @@ fn transcode(source: &String, target: &String) -> bool {
             bandwidth,
             resolution.to_string()
         ));
-
-        prev_height = height;
     }
 
     cpu_rendering.args([
@@ -311,6 +321,7 @@ fn transcode(source: &String, target: &String) -> bool {
             "{}",
             &RENDITIONS
                 .iter()
+                .take(splits)
                 .enumerate()
                 .map(|(ri, _)| format!("v:{ri},a:{ri}").to_string())
                 .collect::<Vec<String>>()
@@ -327,18 +338,13 @@ fn transcode(source: &String, target: &String) -> bool {
     let gpu_output = gpu_rendering.output().expect("Could not render with GPU");
 
     if gpu_output.status.code().unwrap() == 1 {
-        println!("Could not render with GPU");
-        println!("{:?}", cpu_rendering);
+        println!("Could not render with GPU. Using CPU");
         let cpu_output = cpu_rendering.output().unwrap();
 
         if cpu_output.status.code().unwrap() == 1 {
             println!("{}", String::from_utf8_lossy(&cpu_output.stderr));
             panic!("Could not render with CPU");
-        } else {
-            println!("{}", String::from_utf8_lossy(&cpu_output.stderr));
         }
-    } else {
-        println!("stderr: {}", String::from_utf8_lossy(&gpu_output.stderr));
     }
 
     let body = JsonBody {
@@ -354,13 +360,15 @@ fn transcode(source: &String, target: &String) -> bool {
 
     let client = reqwest::blocking::Client::new();
 
-    let resp = client
+    client
         .post("http://backend:1337/transcoder/update-status")
+        .header(
+            "X-Transcoder-Secret",
+            env::var("TRANSCODER_SECRET").unwrap(),
+        )
         .json(&body)
         .send()
-        .unwrap();
-
-    println!("{}", resp.text().unwrap());
+        .expect("Could not request backend");
 
     true
 }

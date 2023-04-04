@@ -4,9 +4,5 @@
 
 ## Setup
 
-Add root user to database
-
-```
-use reeler
-db.createUser({ user: "root", pwd: "example": roles: [{role: "readWrite", db: "reeler" }]})
-```
+1.  Add root user to database:  
+	`docker compose exec database mongosh reelest --eval 'db.createUser({ user: "root", pwd: "example", roles: [{role: "readWrite", db: "reelest" }]})'`

@@ -5,7 +5,7 @@ const config = {
 	bcrypt: { saltRounds: 10 },
 	database: {
 		host: process.env.DATABASE_HOST || "127.0.0.1",
-		name: process.env.DATABASE_NAME || "reeler",
+		name: process.env.DATABASE_NAME || "reelest",
 		pass: process.env.DATABASE_PASS || "example",
 		port: process.env.DATABASE_PORT || 27017,
 		user: process.env.DATABASE_USER || "root",

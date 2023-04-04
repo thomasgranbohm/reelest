@@ -5,7 +5,6 @@ import fs from "fs/promises";
 import prisma from "../database/client";
 import {
 	getProfilePicturePath,
-	getVideoMediaPath,
 	getVideoThumbnailPath,
 	getWebsitePath,
 } from "../lib/paths";
@@ -22,10 +21,8 @@ export async function handleVideoUpload(
 		return false;
 	}
 
-	const destDir = getVideoMediaPath(video);
-
 	await axios.get(
-		`http://transcoder:8000/?input=${file.path}&output=${destDir}`
+		`http://transcoder:8000/?input=${file.filename}&output=${video.id}`
 	);
 
 	return true;

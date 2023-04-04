@@ -37,6 +37,7 @@ services:
   transcoder:
     build:
       context: ./transcoder
+      dockerfile: Dockerfile.prod
     expose:
       - 8000
     environment:

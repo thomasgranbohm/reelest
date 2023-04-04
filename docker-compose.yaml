@@ -8,6 +8,8 @@ services:
     env_file: ./backend/.env
     environment:
       TRANSCODER_SECRET: ${TRANSCODER_SECRET}
+      MEDIA_DIR: ${MEDIA_DIR}
+      UPLOAD_DIR: ${UPLOAD_DIR}
     image: node:16
     ports:
       - 1337:1337
@@ -20,8 +22,9 @@ services:
     build:
       dockerfile: ./config/mongodb-replica
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: reelest
       MONGO_REPLICA_HOST: localhost
       MONGO_REPLICA_PORT: 27017
     expose:
@@ -30,13 +33,19 @@ services:
       - 27017:27017
     volumes:
       - ./database:/data/db
+      - ./config/create-user.js:/docker-entrypoint-initdb.d/create-user.js
   transcoder:
+    build:
+      context: ./transcoder
     command: cargo run
     expose:
       - 8000
     environment:
       TRANSCODER_SECRET: ${TRANSCODER_SECRET}
-    image: rust:1.67
+      ROCKET_ADDRESS: 0.0.0.0
+      MEDIA_DIR: ${MEDIA_DIR}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+    # image: rust:1.67
     ports:
       - 8000:8000
     volumes:

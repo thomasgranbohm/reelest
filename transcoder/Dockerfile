@@ -1,11 +1,2 @@
 FROM rust:1.67 as builder
-WORKDIR /app
-COPY . .
-RUN cargo install --path .
-
-FROM debian:bullseye-slim as runner
 RUN apt update && apt install -y ffmpeg
-COPY --from=builder /usr/local/cargo/bin/transcoder /usr/local/bin/transcoder
-ENV ROCKET_ADDRESS=0.0.0.0
-EXPOSE 8000
-CMD ["transcoder"]
