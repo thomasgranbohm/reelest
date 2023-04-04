@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN cargo install --path .
 
-FROM debian:bullseye-slim as runner
+FROM nvidia/cuda:11.6.0-base-ubuntu20.04 as runner
 RUN apt update && apt install -y ffmpeg
 COPY --from=builder /usr/local/cargo/bin/transcoder /usr/local/bin/transcoder
 ENV ROCKET_ADDRESS=0.0.0.0
