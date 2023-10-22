@@ -19,21 +19,18 @@ services:
       - ./backend:/home/node/app
     working_dir: /home/node/app
   database:
-    build:
-      dockerfile: ./config/mongodb-replica
+    image: postgres:latest
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: reelest
-      MONGO_REPLICA_HOST: localhost
-      MONGO_REPLICA_PORT: 27017
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: reelest
+      POSTGRES_HOST: database
     expose:
-      - 27017
+      - 5432
     ports:
-      - 27017:27017
+      - 5432:5432
     volumes:
-      - ./database:/data/db
-      - ./config/create-user.js:/docker-entrypoint-initdb.d/create-user.js
+      - ./database:/var/lib/postgresql/data
   transcoder:
     build:
       context: ./transcoder
@@ -45,7 +42,6 @@ services:
       ROCKET_ADDRESS: 0.0.0.0
       MEDIA_DIR: ${MEDIA_DIR}
       UPLOAD_DIR: ${UPLOAD_DIR}
-    # image: rust:1.67
     ports:
       - 8000:8000
     volumes:

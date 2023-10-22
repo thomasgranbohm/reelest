@@ -70,14 +70,6 @@ const replyToComment = PromiseHandler(async (req, res) => {
 				id: videoId,
 				threads: {
 					some: {
-						...(value.replyToId
-							? {
-									replies: {
-										some: { replyToId: value.replyToId }, // TODO: may break
-									},
-									// eslint-disable-next-line no-mixed-spaces-and-tabs
-							  }
-							: {}),
 						id: threadId,
 					},
 				},

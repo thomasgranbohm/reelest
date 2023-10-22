@@ -7,6 +7,7 @@ import PromiseHandler from "../lib/PromiseHandler";
 const TranscoderAuthentication: RequestHandler = PromiseHandler(
 	async (req, _, next) => {
 		const secret = req.header("X-Transcoder-Secret");
+		// TODO: Check hostname aswell, req.hostname
 
 		if (secret === null) {
 			throw UnauthorizedError();

@@ -4,19 +4,17 @@ generator client {
 }
 
 datasource db {
-    provider = "mongodb"
+    provider = "postgresql"
     url      = env("DATABASE_URL")
 }
 
 model User {
-    id              String           @id @default(auto()) @map("_id") @db.ObjectId
+    id              String           @id @default(uuid())
     createdAt       DateTime         @default(now())
     displayName     String
     email           String           @unique
-    followedBy      User[]           @relation("UserFollows", fields: [followedByIDs], references: [id])
-    followedByIDs   String[]         @db.ObjectId
-    following       User[]           @relation("UserFollows", fields: [followingIDs], references: [id])
-    followingIDs    String[]         @db.ObjectId
+    followedBy      User[]           @relation("UserFollows")
+    following       User[]           @relation("UserFollows")
     password        String
     profilePictures ProfilePicture[]
     updatedAt       DateTime         @default(now())
@@ -27,14 +25,14 @@ model User {
 }
 
 model Video {
-    id          String      @id @default(auto()) @map("_id") @db.ObjectId
+    id          String      @id @default(uuid())
     createdAt   DateTime    @default(now())
     description String?
     duration    Int?
     status      VideoStatus @default(PROCESSING)
     title       String
     updatedAt   DateTime    @default(now())
-    userId      String      @db.ObjectId
+    userId      String
     user        User        @relation(fields: [userId], references: [id])
     thumbnails  Thumbnail[]
     threads     Thread[]
@@ -52,44 +50,44 @@ enum ImageType {
 }
 
 model ProfilePicture {
-    id     String    @id @default(auto()) @map("_id") @db.ObjectId
+    id     Int       @id @default(autoincrement())
     height Int
     type   ImageType
     url    String
+    userId String    @unique
     user   User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    userId String    @db.ObjectId
     width  Int
 }
 
 model Thumbnail {
-    id      String    @id @default(auto()) @map("_id") @db.ObjectId
+    id      Int       @id @default(autoincrement())
     height  Int
     type    ImageType
     url     String
     video   Video     @relation(fields: [videoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    videoId String    @db.ObjectId
+    videoId String    @unique
     width   Int
 }
 
 model Thread {
-    id      String    @id @default(auto()) @map("_id") @db.ObjectId
+    id      String    @id @default(uuid())
     video   Video?    @relation(fields: [videoId], references: [id])
-    videoId String?   @db.ObjectId
+    videoId String?   @unique
     content String
     user    User      @relation(fields: [userId], references: [id])
-    userId  String    @db.ObjectId
+    userId  String    @unique
     replies Comment[]
 }
 
 model Comment {
-    id        String    @id @default(auto()) @map("_id") @db.ObjectId
+    id        Int       @id @default(autoincrement())
     user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    userId    String?   @db.ObjectId
-    replyToId String?   @db.ObjectId
+    userId    String?   @unique
+    replyToId Int?      @unique
     replyTo   Comment?  @relation("CommentReplies", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
     replies   Comment[] @relation("CommentReplies")
     createdAt DateTime  @default(now())
     content   String
     thread    Thread?   @relation(fields: [threadId], references: [id])
-    threadId  String?   @db.ObjectId
+    threadId  String?   @unique
 }
