@@ -187,8 +187,12 @@ const VideoPlayer: FC<VideoPlayerProps> = ({ video }) => {
 			<HlsPlayer
 				ref={videoRef}
 				className="absolute top-0 bottom-0 z-0 h-full w-full "
-				src={`/api/videos/${id}/stream/master.m3u8`}
-				poster={getVideoThumbnail(video, 1280)}
+				src={`/api/videos/${id}/stream/playlist.m3u8`}
+				poster={
+					(video.thumbnails.length > 0 &&
+						getVideoThumbnail(video, 1280)) ||
+					undefined
+				}
 				onManifestLoad={(manifest) => setLevels(manifest.levels)}
 				onHlsLoad={setHls}
 				playsInline

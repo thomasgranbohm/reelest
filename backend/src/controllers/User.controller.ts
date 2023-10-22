@@ -85,7 +85,7 @@ const createUserFollower = PromiseHandler(
 		const { username } = req.params;
 
 		const authUser = await prisma.user.findUnique({
-			select: { id: true, username: true },
+			select: { username: true },
 			where: { id: req.auth.payload.id },
 		});
 

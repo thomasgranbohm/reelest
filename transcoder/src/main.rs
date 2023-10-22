@@ -14,7 +14,7 @@ use rocket::response::status::{self, Accepted};
 #[macro_use]
 extern crate rocket;
 
-// (w, h, vb, ab)
+// (Width, Height, Video Bitrate, Audio Bitrate)
 const RENDITIONS: [(i32, i32, i32, i32); 7] = [
     (426, 240, 700, 128),
     (640, 360, 1000, 192),
@@ -57,12 +57,12 @@ fn get_resolution(source: &str) -> Result<String, String> {
     if !&resolution_output.status.success() {
         println!("Something went wrong transcoding with GPU.");
 
-        return Err(String::from_utf8_lossy(&resolution_output.stderr).to_string());
+        Err(String::from_utf8_lossy(&resolution_output.stderr).to_string())
+    } else {
+        Ok(String::from_utf8_lossy(&resolution_output.stdout)
+            .trim()
+            .to_string())
     }
-
-    let dirty = String::from_utf8_lossy(&resolution_output.stdout);
-
-    Ok(dirty.trim().to_string())
 }
 
 fn get_fps(source: &str) -> Result<i32, ()> {
@@ -155,7 +155,10 @@ fn transcode(input: &String, output: &String) -> bool {
 
     match fs::create_dir(target) {
         Ok(_) => 0,
-        Err(_) => 1,
+        Err(err) => {
+            println!("{}", err);
+            panic!("Could not create directory {}", target)
+        }
     };
 
     let mut gpu_rendering = Command::new("ffmpeg");
@@ -297,9 +300,7 @@ fn transcode(input: &String, output: &String) -> bool {
         ]);
 
         master_playlist.push(format!(
-            "#EXT-X-STREAM-INF:BANDWIDTH={},RESOLUTION={}",
-            bandwidth,
-            resolution.to_string()
+            "#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},RESOLUTION={width}x{height}"
         ));
     }
 
@@ -330,6 +331,8 @@ fn transcode(input: &String, output: &String) -> bool {
         ),
         &format!("{target}/stream_%v/stream.m3u8"),
     ]);
+
+    println!("{:?}", cpu_rendering);
 
     let mut playlist_file = File::create(format!("{}/playlist.m3u8", target)).unwrap();
 
@@ -370,6 +373,8 @@ fn transcode(input: &String, output: &String) -> bool {
         .send()
         .expect("Could not request backend");
 
+    println!("Updated video");
+
     true
 }
 
@@ -382,5 +387,17 @@ async fn get_id(input: String, output: String) -> Accepted<String> {
 
 #[launch]
 fn rocket() -> _ {
+    let videos_media_path = Path::new(&env::var("MEDIA_DIR").unwrap()).join("videos");
+
+    match fs::read_dir(&videos_media_path) {
+        Ok(_) => 0,
+        Err(_) => match fs::create_dir(&videos_media_path) {
+            Ok(_) => 0,
+            Err(err) => {
+                panic!("{}", err);
+            }
+        },
+    };
+
     rocket::build().mount("/", routes![get_id])
 }

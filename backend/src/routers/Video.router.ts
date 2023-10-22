@@ -15,7 +15,7 @@ VideoRouter.get("/:id", VideoController.getVideo);
 
 // Get video stream
 VideoRouter.get(
-	"/:id/stream/:stream(master.m3u8|stream_[0-9]+/(data[0-9]+.ts|stream.m3u8))",
+	"/:id/stream/:stream(playlist.m3u8|stream_[0-9]+/(data[0-9]+.ts|stream.m3u8))",
 	VideoController.getVideoStream
 );
 

@@ -322,12 +322,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc/stream/master.m3u8",
+							"raw": "{{baseUrl}}{{videosPath}}/641662ce571f7b5698ba31fc/stream/playlist.m3u8",
 							"host": ["{{baseUrl}}{{videosPath}}"],
 							"path": [
 								"641662ce571f7b5698ba31fc",
 								"stream",
-								"master.m3u8"
+								"playlist.m3u8"
 							]
 						}
 					},

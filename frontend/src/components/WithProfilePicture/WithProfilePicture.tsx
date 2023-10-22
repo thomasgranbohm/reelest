@@ -24,17 +24,19 @@ const WithProfilePicture: FC<WithProfilePictureProps> = ({
 				className
 			)}
 		>
-			<Link href={`/user/${user.username}`}>
-				<div className="pr-2">
-					<Image
-						className={clsx(imageSizeClasses[size], "rounded-full")}
-						src={"/api" + user.profilePictures.small.url}
-						width={user.profilePictures.small.width}
-						height={user.profilePictures.small.height}
-						alt={`Profile picture for ${user.displayName}`}
-					/>
-				</div>
-			</Link>
+			{user.profilePictures.small && (
+				<Link href={`/user/${user.username}`}>
+					<div className="rounded-full pr-2">
+						<Image
+							className={imageSizeClasses[size]}
+							src={"/api" + user.profilePictures.small.url}
+							width={user.profilePictures.small.width}
+							height={user.profilePictures.small.height}
+							alt={`Profile picture for ${user.displayName}`}
+						/>
+					</div>
+				</Link>
+			)}
 			<div className="flex flex-col items-start justify-start">
 				{children}
 			</div>
