@@ -1,7 +1,6 @@
 use std::{
     env,
-    fs::{self, File},
-    io::Write,
+    fs::{self},
     path::Path,
     process::Command,
     thread,
@@ -210,15 +209,11 @@ fn transcode(input: &String, output: &String) -> bool {
         ),
     ]);
 
-    let mut master_playlist: Vec<String> =
-        vec![String::from("#EXTM3U"), String::from("#EXT-X-VERSION:3")];
-
     for i in 0..splits {
         let (width, height, video_bitrate, audio_bitrate) = RENDITIONS[i];
 
         let max_rate = video_bitrate as f32 * MAX_BITRATE_RATIO;
         let bufsize = video_bitrate as f32 * RATE_MONITOR_BUFFER_RATIO;
-        let bandwidth = video_bitrate * 1000;
 
         let name = format!("{}p", height);
 
@@ -298,10 +293,6 @@ fn transcode(input: &String, output: &String) -> bool {
             "-ac",
             "2",
         ]);
-
-        master_playlist.push(format!(
-            "#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},RESOLUTION={width}x{height}"
-        ));
     }
 
     cpu_rendering.args([
@@ -315,8 +306,6 @@ fn transcode(input: &String, output: &String) -> bool {
         "independent_segments",
         "-hls_segment_type",
         "mpegts",
-        "-hls_segment_filename",
-        &format!("{target}/stream_%v/data%02d.ts"),
         "-var_stream_map",
         &format!(
             "{}",
@@ -329,14 +318,12 @@ fn transcode(input: &String, output: &String) -> bool {
                 .join(" ")
                 .to_string()
         ),
+        "-master_pl_name",
+        &format!("playlist.m3u8"),
+        "-hls_segment_filename",
+        &format!("{target}/stream_%v/data%02d.ts"),
         &format!("{target}/stream_%v/stream.m3u8"),
     ]);
-
-    println!("{:?}", cpu_rendering);
-
-    let mut playlist_file = File::create(format!("{}/playlist.m3u8", target)).unwrap();
-
-    write!(playlist_file, "{}", master_playlist.join("\n").to_string()).unwrap();
 
     let gpu_output = gpu_rendering.output().expect("Could not render with GPU");
 
