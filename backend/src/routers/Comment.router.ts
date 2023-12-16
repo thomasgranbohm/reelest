@@ -12,18 +12,12 @@ CommentRouter.post(
 	CommentController.createComment
 );
 
-CommentRouter.post(
-	"/:videoId/:threadId",
+CommentRouter.get("/:videoId", Pagination, CommentController.getComments);
+
+CommentRouter.delete(
+	"/:videoId",
 	Authentication,
-	CommentController.replyToComment
-);
-
-CommentRouter.get("/:videoId", Pagination, CommentController.getThreads);
-
-CommentRouter.get(
-	"/:videoId/:threadId",
-	Pagination,
-	CommentController.getThreadComments
+	CommentController.deleteComment
 );
 
 export default CommentRouter;

@@ -7,7 +7,6 @@ import Heading from "components/Heading";
 import Layout from "components/Layout";
 import NumberDisplay from "components/NumberDisplay";
 import Separator from "components/Separator";
-import ThreadContainer from "components/ThreadsContainer";
 import VideoPlayer from "components/VideoPlayer";
 import WithUserLink from "components/WithUserLink";
 import { IVideo } from "types/video";
@@ -50,7 +49,6 @@ const VideoPage: NextPage<VideoPageProps> = ({ video }) => {
 					<div className="mt-4">
 						<p>{description}</p>
 					</div>
-					<ThreadContainer videoId={video.id} />
 				</Column>
 			</Row>
 		</Layout>

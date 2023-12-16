@@ -60,7 +60,7 @@ const config = {
 		secret: process.env.JWT_SECRET || "abcdefgh01234567",
 	},
 	media: {
-		dir: process.env.MEDIA_PATH || "/media",
+		dir: process.env.MEDIA_DIR || "/media",
 		users_dir: "/users",
 		videos_dir: "/videos",
 	},

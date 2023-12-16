@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import CommentController from "../controllers/Comment.controller";
 import VideoController from "../controllers/Video.controller";
 import Authentication from "../middlewares/Authentication";
 import Pagination from "../middlewares/Pagination";
@@ -12,6 +13,9 @@ VideoRouter.get("/", Pagination, VideoController.getVideos);
 
 // Get video
 VideoRouter.get("/:id", VideoController.getVideo);
+
+// Get video comments
+VideoRouter.get("/:videoId/comments", CommentController.getComments);
 
 // Get video stream
 VideoRouter.get(
@@ -30,6 +34,13 @@ VideoRouter.post(
 	Authentication,
 	VideoUpload.single("file"),
 	VideoController.createVideo
+);
+
+// Create comment
+VideoRouter.post(
+	"/:videoId/comments",
+	Authentication,
+	CommentController.createComment
 );
 
 // Update video

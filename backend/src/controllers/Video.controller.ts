@@ -15,7 +15,6 @@ import {
 import getTokenString from "../lib/getTokenString";
 import { getVideoMediaPath, getVideoThumbnailPath } from "../lib/paths";
 import PromiseHandler from "../lib/PromiseHandler";
-import { transformVideo } from "../lib/transformer";
 import {
 	handleVideoThumbnailUpload,
 	handleVideoUpload,
@@ -99,7 +98,7 @@ const getVideos = PromiseHandler(async (req, res) => {
 	]);
 
 	return res.send({
-		data: videos.map(transformVideo),
+		data: videos,
 		pagination: {
 			skip: req.pagination.skip,
 			take: req.pagination.take,
@@ -114,18 +113,13 @@ const getVideo = PromiseHandler(async (req, res) => {
 	const video = await prisma.video.findUnique({
 		select: {
 			_count: {
-				select: { threads: true },
+				select: { comments: true },
 			},
 			createdAt: true,
 			description: true,
 			duration: true,
 			id: true,
 			status: true,
-			threads: {
-				select: {
-					_count: { select: { replies: true } },
-				},
-			},
 			thumbnails: {
 				select: { height: true, type: true, url: true, width: true },
 				take: 10,
@@ -166,7 +160,7 @@ const getVideo = PromiseHandler(async (req, res) => {
 		throw NotFoundError();
 	}
 
-	return res.send({ data: { video: transformVideo(video) } });
+	return res.send({ data: { video } });
 });
 
 const getVideoStream = PromiseHandler(async (req, res) => {

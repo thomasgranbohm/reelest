@@ -17,7 +17,6 @@ import {
 import parseWhereOptions from "../lib/parseWhereOptions";
 import { getProfilePicturePath } from "../lib/paths";
 import PromiseHandler from "../lib/PromiseHandler";
-import { transformUser, transformVideo } from "../lib/transformer";
 import { handleProfilePictureUpload } from "../services/FileSystem";
 import { signToken } from "../services/JWT";
 import { LoginValidationSchema, RegisterValidationSchema } from "../types/user";
@@ -151,7 +150,7 @@ const getUser = PromiseHandler(async (req: Request, res: Response) => {
 		throw NotFoundError();
 	}
 
-	return res.send({ data: { user: transformUser({ ...user }) } });
+	return res.send({ data: { user } });
 });
 
 const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
@@ -192,7 +191,7 @@ const getUserFollowers = PromiseHandler(async (req: Request, res: Response) => {
 	}
 
 	return res.send({
-		data: user.followedBy.map(transformUser),
+		data: user.followedBy,
 		skip: req.pagination.skip,
 		take: req.pagination.take,
 		total: user._count.followedBy,
@@ -237,7 +236,7 @@ const getUserFollowing = PromiseHandler(async (req: Request, res: Response) => {
 	}
 
 	return res.send({
-		data: user.following.map(transformUser),
+		data: user.following,
 		skip: req.pagination.skip,
 		take: req.pagination.take,
 		total: user._count.following,
@@ -274,7 +273,7 @@ const getUserVideos = PromiseHandler(async (req: Request, res: Response) => {
 	]);
 
 	return res.send({
-		data: videos.map(transformVideo),
+		data: videos,
 		pagination: {
 			skip: req.pagination.skip + req.pagination.take,
 			take: req.pagination.take,
