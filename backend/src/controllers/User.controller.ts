@@ -385,6 +385,8 @@ const authenticateUser = PromiseHandler(async (req: Request, res: Response) => {
 		},
 	});
 
+	console.log(user, value);
+
 	if (user === null) {
 		throw InvalidCredentialsError();
 	}

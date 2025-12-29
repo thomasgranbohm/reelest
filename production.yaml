@@ -34,6 +34,16 @@ services:
       - 27017
     volumes:
       - ./database:/data/db
+  frontend:
+    build:
+      context: frontend/
+      dockerfile: Dockerfile.prod
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+      - NODE_ENV=production
+    expose:
+      - 3000
+    restart: unless-stopped
   transcoder:
     build:
       context: ./transcoder

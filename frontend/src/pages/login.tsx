@@ -9,20 +9,20 @@ import * as Yup from "yup";
 import Heading from "components/Heading";
 import TextField from "components/TextField";
 
-const RegisterSchema = Yup.object().shape({
+const LoginSchema = Yup.object().shape({
 	identifier: Yup.string()
 		.matches(/^[^\s\t]+$/)
 		.required("Identifier is required"),
 	password: Yup.string().required("Password is required"),
 });
 
-const RegisterPage: NextPage<RegisterPageProps> = () => {
+const LoginPage: NextPage<LoginPageProps> = () => {
 	const router = useRouter();
 	const [error, setError] = useState<string>();
 
 	return (
 		<section className="mx-auto max-w-2xl">
-			<Heading type="h1">Register</Heading>
+			<Heading type="h1">Login</Heading>
 			<Formik
 				initialValues={{
 					identifier: "",
@@ -36,6 +36,8 @@ const RegisterPage: NextPage<RegisterPageProps> = () => {
 							"/users/login",
 							e
 						);
+
+						console.log(data, status);
 
 						if (status >= 400) {
 							throw new Error("Something went wrong");
@@ -56,7 +58,7 @@ const RegisterPage: NextPage<RegisterPageProps> = () => {
 						setError(JSON.stringify(error));
 					}
 				}}
-				validationSchema={RegisterSchema}
+				validationSchema={LoginSchema}
 			>
 				{({ errors, touched }) => (
 					<Form>
@@ -81,7 +83,7 @@ const RegisterPage: NextPage<RegisterPageProps> = () => {
 							className="mt-4 rounded-md bg-violet-500 py-4 px-8 text-lg font-bold text-white transition-colors hover:bg-violet-700"
 							type="submit"
 						>
-							Register
+							Login
 						</button>
 						{error && (
 							<p className="mt-4 text-base text-red-600">
@@ -95,8 +97,8 @@ const RegisterPage: NextPage<RegisterPageProps> = () => {
 	);
 };
 
-interface RegisterPageProps {
+interface LoginPageProps {
 	// Remove me
 }
 
-export default RegisterPage;
+export default LoginPage;
